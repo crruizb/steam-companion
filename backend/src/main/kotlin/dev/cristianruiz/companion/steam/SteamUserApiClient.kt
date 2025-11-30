@@ -1,12 +1,11 @@
 package dev.cristianruiz.companion.steam
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
 @Service
-class SteamUserApi(
+class SteamUserApiClient(
     private val restTemplate: RestTemplate
 ) {
 
@@ -21,26 +20,11 @@ class SteamUserApi(
         return restTemplate.getForObject(url, PlayerSummaryResponse::class.java)?.response ?: PlayerSummaries(emptyList())
     }
 
+    fun getOwnedGames(steamId: String): PlayerOwnedGamesResponse {
+        val url = "$steamApiUrl/IPlayerService/GetOwnedGames/v0001/?key=$apiKey&steamid=$steamId&include_appinfo=true"
+        return restTemplate
+            .getForObject(url, PlayerOwnedGamesResponse::class.java) ?:
+            PlayerOwnedGamesResponse(PlayerOwnedGames(emptyList(), gameCount = 0))
+    }
+
 }
-
-data class PlayerSummaryResponse(
-    val response: PlayerSummaries
-)
-
-data class PlayerSummaries(
-    val players: List<PlayerSummary>
-)
-
-data class PlayerSummary(
-    @JsonProperty("steamid")
-    val steamId: String,
-    @JsonProperty("personaname")
-    val personaName: String,
-    @JsonProperty("profileurl")
-    val profileUrl: String,
-    val avatar: String,
-    @JsonProperty("avatarmedium")
-    val avatarMedium: String,
-    @JsonProperty("avatarfull")
-    val avatarFull: String
-)

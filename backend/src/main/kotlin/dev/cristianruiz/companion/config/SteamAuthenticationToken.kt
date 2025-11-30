@@ -1,13 +1,12 @@
 package dev.cristianruiz.companion.config
 
 import dev.cristianruiz.companion.user.entity.User
-import dev.cristianruiz.companion.user.dto.UserDto
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class SteamAuthenticationToken(
-    private val user: UserDto
+    private val user: User
 ) : Authentication {
 
     private var authenticated = true

@@ -1,6 +1,6 @@
 package dev.cristianruiz.companion.auth
 
-import dev.cristianruiz.companion.steam.SteamUserApi
+import dev.cristianruiz.companion.steam.SteamUserApiClient
 import dev.cristianruiz.companion.user.UserService
 import dev.cristianruiz.companion.user.dto.UserDto
 import org.springframework.beans.factory.annotation.Value
@@ -17,7 +17,7 @@ import java.util.regex.Pattern
 class SteamOpenIdService(
     private val userService: UserService,
     private val restTemplate: RestTemplate,
-    private val steamUserApi: SteamUserApi,
+    private val steamUserApiClient: SteamUserApiClient,
 ) {
 
     @Value("\${app.steam.openid.realm}")
@@ -54,10 +54,11 @@ class SteamOpenIdService(
         val identity = params["openid.identity"] ?: return null
         val steamId = extractSteamId(identity) ?: return null
 
-        val playerSummary = steamUserApi.getPlayerSummaries(listOf(steamId)).players.firstOrNull()
+        val playerSummary = steamUserApiClient.getPlayerSummaries(listOf(steamId)).players.firstOrNull()
 
         return userService.findBySteamId(steamId) ?: userService.saveUser(
             UserDto(
+                id = null,
                 steamId = steamId,
                 username = "steam_$steamId",
                 displayName = playerSummary?.personaName,

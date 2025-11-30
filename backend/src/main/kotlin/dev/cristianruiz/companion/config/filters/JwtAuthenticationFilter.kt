@@ -37,7 +37,7 @@ class JwtAuthenticationFilter(
                     val user = userService.findBySteamId(steamId)
 
                     if (user != null && jwtService.isTokenValid(jwt, steamId)) {
-                        val authToken = SteamAuthenticationToken(user)
+                        val authToken = SteamAuthenticationToken(user.toUser())
                         SecurityContextHolder.getContext().authentication = authToken
                     }
                 }
