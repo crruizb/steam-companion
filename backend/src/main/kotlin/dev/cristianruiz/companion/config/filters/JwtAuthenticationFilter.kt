@@ -21,7 +21,7 @@ class JwtAuthenticationFilter(
 
     private val log = LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
 
-    override fun doFilterInternal(
+    public override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain

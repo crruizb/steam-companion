@@ -1,0 +1,8 @@
+CREATE TABLE refresh_tokens (
+    id BIGSERIAL NOT NULL PRIMARY KEY,
+    token VARCHAR UNIQUE NOT NULL,
+    steam_id VARCHAR NOT NULL,
+    expiry_date TIMESTAMPTZ NOT NULL,
+    is_revoked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

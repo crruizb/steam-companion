@@ -23,7 +23,10 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET:YourSuperSecretJWTKeyThatShouldBeAtLeast32CharactersLong}
-    expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+    access-token:
+      expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+    refresh-token:
+      expiration: 2592000000  # 30 days in milliseconds
   steam:
     apiKey: ${STEAM_API_KEY}
     openid:
