@@ -4,11 +4,15 @@ import dev.cristianruiz.companion.auth.dto.AuthResponse
 import dev.cristianruiz.companion.auth.dto.RefreshTokenRequest
 import dev.cristianruiz.companion.auth.dto.TokenResponse
 import dev.cristianruiz.companion.user.UserService
+import jakarta.servlet.http.Cookie
+import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.view.RedirectView
+import java.net.URLEncoder.encode
 
 @RestController
 @RequestMapping("/api/auth")
@@ -17,6 +21,9 @@ class AuthController(
     private val jwtService: JwtService,
     private val userService: UserService,
 ) {
+
+    @Value("\${app.frontend.url}")
+    private lateinit var frontendUrl: String
 
     private val log = LoggerFactory.getLogger(AuthController::class.java)
 
@@ -27,26 +34,44 @@ class AuthController(
     }
 
     @GetMapping("/steam/callback")
-    fun steamCallback(@RequestParam params: Map<String, String>): ResponseEntity<AuthResponse> {
+    fun steamCallback(@RequestParam params: Map<String, String>, response: HttpServletResponse): RedirectView {
         return try {
             val user = steamOpenIdService.verifyAndGetUser(params)
             if (user != null) {
                 val accessToken = jwtService.generateAccessToken(user)
                 val refreshToken = jwtService.generateRefreshToken(user)
-                ResponseEntity.ok(
-                    AuthResponse(
-                        accessToken = accessToken,
-                        refreshToken = refreshToken,
-                        user = user.copy(ownedGames = null),
-                    )
+
+                val accessCookie = Cookie("accessToken", accessToken).apply {
+                    isHttpOnly = true
+                    secure = true
+                    maxAge = 60 * 60 * 24 // 24 hours
+                    path = "/"
+                }
+
+                val refreshCookie = Cookie("refreshToken", refreshToken).apply {
+                    isHttpOnly = true
+                    secure = true
+                    maxAge = 60 * 60 * 24 * 30
+                    path = "/"
+                }
+
+                response.addCookie(accessCookie)
+                response.addCookie(refreshCookie)
+
+                val userJson = encode(
+                    "{\"steamId\":\"${user.steamId}\",\"username\":\"${user.username}\",\"displayName\":\"${user.displayName}\",\"avatarUrl\":\"${user.avatarUrl}\",\"profileUrl\":\"${user.profileUrl}\"}",
+                    "UTF-8"
                 )
+                val callbackUrl = "$frontendUrl/auth/callback?success=true&user=$userJson"
+                RedirectView(callbackUrl)
             } else {
-                ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(AuthResponse(error = "Authentication failed"))
+                val errorUrl = "$frontendUrl/auth/callback?success=false&error=Authentication failed"
+                RedirectView(errorUrl)
             }
         } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(AuthResponse(error = "Internal server error: ${e.message}"))
+            log.error("Steam authentication error", e)
+            val errorUrl = "$frontendUrl/auth/callback?success=false&error=${e.message}"
+            RedirectView(errorUrl)
         }
     }
 
@@ -70,10 +95,33 @@ class AuthController(
         return ResponseEntity.ok(TokenResponse(newAccessToken, newRefreshToken))
     }
 
-    @DeleteMapping("/logout")
-    fun logout(@RequestBody request: RefreshTokenRequest): ResponseEntity<Void> {
-        val steamId = jwtService.extractSteamId(request.refreshToken)
-        jwtService.logoutBySteamId(steamId)
+    @PostMapping("/logout")
+    fun logout(@CookieValue("refreshToken", required = false) refreshToken: String?, response: HttpServletResponse): ResponseEntity<Void> {
+        refreshToken?.let { token ->
+            try {
+                val steamId = jwtService.extractSteamId(token)
+                jwtService.logoutBySteamId(steamId)
+            } catch (e: Exception) {
+                log.warn("Error during logout", e)
+            }
+        }
+
+        val accessCookie = Cookie("accessToken", "").apply {
+            isHttpOnly = true
+            secure = true
+            maxAge = 0
+            path = "/"
+        }
+        val refreshCookie = Cookie("refreshToken", "").apply {
+            isHttpOnly = true
+            secure = true
+            maxAge = 0
+            path = "/"
+        }
+
+        response.addCookie(accessCookie)
+        response.addCookie(refreshCookie)
+
         return ResponseEntity.noContent().build()
     }
 }

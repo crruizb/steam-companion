@@ -26,24 +26,29 @@ class JwtAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+        var jwt: String? = null
+
         val authHeader = request.getHeader("Authorization")
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7)
+        } else {
+            request.cookies?.find { it.name == "accessToken" }?.let { cookie ->
+                jwt = cookie.value
+            }
+        }
+
+        if (jwt != null && SecurityContextHolder.getContext().authentication == null) {
             try {
-                val jwt = authHeader.substring(7)
                 val steamId = jwtService.extractSteamId(jwt)
+                val user = userService.findBySteamId(steamId)
 
-                if (SecurityContextHolder.getContext().authentication == null) {
-                    val user = userService.findBySteamId(steamId)
-
-                    if (user != null && jwtService.isTokenValid(jwt, steamId)) {
-                        val authToken = SteamAuthenticationToken(user.toUser())
-                        SecurityContextHolder.getContext().authentication = authToken
-                    }
+                if (user != null && jwtService.isTokenValid(jwt, steamId)) {
+                    val authToken = SteamAuthenticationToken(user.toUser())
+                    SecurityContextHolder.getContext().authentication = authToken
                 }
             } catch (e: Exception) {
                 // Invalid token, continue without authentication
-                log.warn(e.message, e)
+                log.warn("JWT authentication failed: ${e.message}")
             }
         }
 
