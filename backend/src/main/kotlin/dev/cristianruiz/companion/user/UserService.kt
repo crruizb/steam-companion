@@ -25,8 +25,9 @@ open class UserService(
     }
 
     fun saveUser(user: UserDto): UserDto {
+        val userEntity = user.toUser()
         return userRepository
-            .save(user.toUser())
+            .save(userEntity)
             .toDto()
     }
 }

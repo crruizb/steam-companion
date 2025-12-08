@@ -1,6 +1,7 @@
 package dev.cristianruiz.companion.games
 
 
+import dev.cristianruiz.companion.games.dto.UserGamesDto
 import dev.cristianruiz.companion.games.entity.UserGames
 import dev.cristianruiz.companion.games.entity.UserGamesId
 import dev.cristianruiz.companion.steam.SteamUserApiClient
@@ -27,5 +28,15 @@ class GamesService(
         }
 
         gamesRepository.saveAll(userGames)
+    }
+
+    fun getRandomGame(user: User): UserGamesDto {
+        val userGames = gamesRepository.findByUserId(user.id)
+        if (userGames.isEmpty()) {
+            throw NoSuchElementException("User has no games imported.")
+        }
+        return userGames
+            .random()
+            .toUserGamesDto()
     }
 }

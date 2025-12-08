@@ -51,7 +51,12 @@ class User(
     var userGames: MutableSet<UserGames> = mutableSetOf()
 ) {
 
-    override fun equals(other: Any?) = (other is UserGames) && id == other.id.userId
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is User) return false
+        return id == other.id
+    }
+
     override fun hashCode() = id.hashCode()
 
     fun toDto(): UserDto {
@@ -64,5 +69,9 @@ class User(
             profileUrl = this.profileUrl ?: "",
             ownedGames = this.userGames.map { it.toUserGamesDto() }.toSet()
         )
+    }
+
+    override fun toString(): String {
+        return "User(id=$id, steamId='$steamId', username='$username', displayName=$displayName, avatarUrl=$avatarUrl, profileUrl=$profileUrl, createdAt=$createdAt, updatedAt=$updatedAt, userGames=$userGames)"
     }
 }

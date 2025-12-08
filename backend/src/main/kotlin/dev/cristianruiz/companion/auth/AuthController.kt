@@ -33,7 +33,7 @@ class AuthController(
                 ResponseEntity.ok(
                     AuthResponse(
                         token = token,
-                        user = user,
+                        user = user.copy(ownedGames = null),
                     )
                 )
             } else {
