@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { authService } from "../services/authService.ts";
 import {authKeys} from "../hooks/useAuth.ts";
+import {storeUser} from "../services/authService.ts";
 
 function CallbackPage() {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ function CallbackPage() {
           try {
             const userData = JSON.parse(decodeURIComponent(userParam));
             console.log(userData)
-            authService.storeUser(userData);
+            storeUser(userData);
           } catch (parseError) {
             console.error('Failed to parse user data:', parseError);
             throw new Error('Invalid user data received');
