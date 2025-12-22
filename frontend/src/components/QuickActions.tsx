@@ -55,25 +55,25 @@ export default function QuickActions({ onViewChange }: QuickActionsProps) {
       </h3>
       <div className="space-y-3">
         <button
-          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer"
           onClick={() => onViewChange("library")}
         >
           View Game Library
         </button>
         <button
-          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer"
           onClick={() => onViewChange("achievements")}
         >
           Check Achievements
         </button>
         <button
-          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer"
           onClick={handleRandomGame}
         >
           Choose random game
         </button>
         <button
-          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer"
           onClick={handleImportGames}
         >
           Import games

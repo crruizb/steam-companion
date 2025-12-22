@@ -32,6 +32,8 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.postgresql:postgresql")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+
 	// JWT dependencies
 	implementation("io.jsonwebtoken:jjwt-api:0.12.3")
 	implementation("io.jsonwebtoken:jjwt-impl:0.12.3")

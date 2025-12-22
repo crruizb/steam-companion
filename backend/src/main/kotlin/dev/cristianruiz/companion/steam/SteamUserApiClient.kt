@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate
 interface SteamUserApiClient {
     fun getPlayerSummaries(steamIds: List<String>): PlayerSummaries
     fun getOwnedGames(steamId: String): PlayerOwnedGamesResponse
+    fun getPlayerAchievements(steamId: String, appId: Int): PlayerAchievementsResponse?
 }
 
 @Service
@@ -33,6 +34,12 @@ class HttpSteamUserApiClient(
         return restTemplate
             .getForObject(url, PlayerOwnedGamesResponse::class.java) ?:
             PlayerOwnedGamesResponse(PlayerOwnedGames(emptyList(), gameCount = 0))
+    }
+
+    override fun getPlayerAchievements(steamId: String, appId: Int): PlayerAchievementsResponse? {
+        val url = "$steamApiUrl/ISteamUserStats/GetPlayerAchievements/v0001/?key=$apiKey&steamid=$steamId&appid=$appId"
+        return restTemplate
+            .getForObject(url, PlayerAchievementsResponse::class.java)
     }
 
 }
