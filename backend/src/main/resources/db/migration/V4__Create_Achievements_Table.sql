@@ -7,6 +7,7 @@ CREATE TABLE achievements (
     unlock_time TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, app_id, name, unlock_time),
     CONSTRAINT fk_user
         FOREIGN KEY(user_id)
             REFERENCES users(id)
@@ -17,3 +18,4 @@ CREATE TRIGGER update_achievements_updated_at
     BEFORE UPDATE ON achievements
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+

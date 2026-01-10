@@ -10,3 +10,7 @@ logging:
         orm:
           jdbc:
             bind: TRACE
+        type:
+          descriptor:
+            sql:
+              BasicBinder=TRACE:

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useImportGames, useUserGames } from "../hooks/useGames";
 import Modal from "./Modal";
+import { useImportAchievements } from "../hooks/useAchievements";
 
 type ViewType = "library" | "achievements" | null;
 
@@ -10,6 +11,7 @@ interface QuickActionsProps {
 
 export default function QuickActions({ onViewChange }: QuickActionsProps) {
   const { mutate: importGames } = useImportGames();
+  const { mutate: importAchievements } = useImportAchievements();
   const { data: user } = useUserGames();
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [gameInfo, setGameInfo] = useState({
@@ -19,6 +21,10 @@ export default function QuickActions({ onViewChange }: QuickActionsProps) {
 
   const handleImportGames = () => {
     importGames();
+  };
+
+  const handleImportAchievements = () => {
+    importAchievements();
   };
 
   const handleRandomGame = () => {
@@ -77,6 +83,12 @@ export default function QuickActions({ onViewChange }: QuickActionsProps) {
           onClick={handleImportGames}
         >
           Import games
+        </button>
+        <button
+          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer"
+          onClick={handleImportAchievements}
+        >
+          Import achievements
         </button>
       </div>
     </section>

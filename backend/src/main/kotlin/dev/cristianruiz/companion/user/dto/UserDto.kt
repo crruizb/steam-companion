@@ -14,7 +14,7 @@ data class UserDto(
 ) {
     fun toUser(): User {
         return User(
-            id = this.id ?: -1,
+            id = this.id ?: 0,
             steamId = this.steamId,
             username = this.username,
             displayName = this.displayName,

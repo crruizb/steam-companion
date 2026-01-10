@@ -17,4 +17,12 @@ class GlobalExceptionHandler {
         return ResponseEntity(error, HttpStatus.NOT_FOUND)
     }
 
+    @ExceptionHandler(BadRequestException::class)
+    fun handleBadRequestException(ex: BadRequestException): ResponseEntity<ErrorResponse> {
+        val error = ErrorResponse(ex.message ?: "Bad request")
+        return ResponseEntity(error, HttpStatus.BAD_REQUEST)
+    }
+
 }
+
+class BadRequestException(msg: String) : RuntimeException(msg)
