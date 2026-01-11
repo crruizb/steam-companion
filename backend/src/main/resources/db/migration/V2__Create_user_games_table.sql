@@ -6,5 +6,9 @@ CREATE TABLE user_games (
     img_url VARCHAR,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, app_id)
+    PRIMARY KEY (user_id, app_id),
+    CONSTRAINT fk_user
+        FOREIGN KEY(user_id)
+            REFERENCES users(id)
+            ON DELETE CASCADE
 );

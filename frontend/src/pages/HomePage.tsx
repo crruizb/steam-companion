@@ -9,11 +9,8 @@ import Login from "../components/Login.tsx";
 import GameLibrary from "../components/GameLibrary.tsx";
 import AchievementsHeatmap from "../components/AchievementsHeatmap.tsx";
 
-type ViewType = "library" | "achievements" | null;
-
 function HomePage() {
   const { data: user, isLoading, error } = useUser();
-  const [activeView, setActiveView] = useState<ViewType>("library");
 
   // Show full-page loading only when initially loading user data
   if (isLoading && !user) {
@@ -62,10 +59,10 @@ function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <ProfileCard user={user} />
               <GameStatistics />
-              <QuickActions onViewChange={setActiveView} />
+              <QuickActions />
             </div>
-            {activeView === "library" && <GameLibrary />}
-            {activeView === "achievements" && <AchievementsHeatmap />}
+            <AchievementsHeatmap />
+            <GameLibrary />
           </div>
         ) : (
           <Login />

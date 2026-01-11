@@ -19,6 +19,7 @@ export default function GameLibrary() {
 
   return (
     <div className="mt-10">
+      <h1 className="text-2xl mb-2">Your game library</h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-6">
         {user?.ownedGames
           ?.sort(() => Math.random() - 0.5)

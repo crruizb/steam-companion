@@ -1,4 +1,3 @@
-import { Achievement } from "./index";
 export interface User {
   id: number | null;
   steamId: string;
@@ -33,7 +32,7 @@ export interface RefreshTokenRequest {
 }
 
 export interface AchievementsPerDate {
-  date: string;
+  unlockDate: string;
   count: number;
 }
 
