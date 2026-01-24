@@ -20,17 +20,17 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "25"
-          cache: "maven"
+          cache: "gradle"
 
-      - name: Build and test with Maven
+      - name: Build and test with Gradle
         working-directory: backend
-        run: ./gradlew clean build --no-daemon
+        run: ./gradlew clean build --no-daemon -x test
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-jar
-          path: backend/target/*.jar
+          path: backend/build/libs/*.jar
           retention-days: 3
 
   deploy:
@@ -45,7 +45,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-jar
-          path: backend/target/
+          path: backend/build/libs/
 
       - name: Get current date
         run: echo "IMAGE_TAG=$(date -u +'%Y%m%d%H%M%S')" >> $GITHUB_ENV

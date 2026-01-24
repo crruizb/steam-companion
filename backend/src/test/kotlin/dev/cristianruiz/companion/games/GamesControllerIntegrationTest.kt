@@ -2,6 +2,7 @@ package dev.cristianruiz.companion.games
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.cristianruiz.companion.auth.JwtService
+import dev.cristianruiz.companion.steam.PlayerAchievementsResponse
 import dev.cristianruiz.companion.steam.PlayerOwnedGame
 import dev.cristianruiz.companion.steam.PlayerOwnedGames
 import dev.cristianruiz.companion.steam.PlayerOwnedGamesResponse
@@ -59,6 +60,13 @@ class TestSteamUserApiClient: SteamUserApiClient {
             )
         )
     }
+
+    override fun getPlayerAchievements(
+        steamId: String,
+        appId: Int
+    ): PlayerAchievementsResponse? {
+        TODO("Not yet implemented")
+    }
 }
 
 @SpringBootTest
@@ -102,7 +110,7 @@ class GamesControllerIntegrationTest {
 
         testUser = userRepository.save(testUser)
 
-        validJwtToken = jwtService.generateToken(testUserDto)
+        validJwtToken = jwtService.generateToken(testUserDto, 123, "ACCESS")
     }
 
     @AfterEach

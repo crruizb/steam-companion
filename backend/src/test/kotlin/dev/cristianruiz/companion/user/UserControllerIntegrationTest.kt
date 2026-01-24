@@ -60,7 +60,7 @@ class UserControllerIntegrationTest {
 
         testUser = userRepository.save(testUser)
 
-        validJwtToken = jwtService.generateToken(testUserDto)
+        validJwtToken = jwtService.generateToken(testUserDto, 123, "ACCESS")
     }
 
     @AfterEach
@@ -118,7 +118,7 @@ class UserControllerIntegrationTest {
 
     @Test
     fun `should return 401 when user not found for valid token`() {
-        val validTokenButNoUser = jwtService.generateToken(testUserDto.copy(steamId = "nonExistent"))
+        val validTokenButNoUser = jwtService.generateToken(testUserDto.copy(steamId = "nonExistent"), 123, "ACCESS")
 
         mockMvc.perform(
             get("/api/user/me")
