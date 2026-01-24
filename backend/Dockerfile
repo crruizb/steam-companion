@@ -1,4 +1,4 @@
-FROM openjdk:25-jdk-slim
+FROM eclipse-temurin:25-jdk-alpine
 WORKDIR /app
 
 COPY build/libs/*.jar app.jar
