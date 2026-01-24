@@ -14,7 +14,7 @@ export const initiateSteamLogin = (): void => {
  * Refreshes the access token using a refresh token
  */
 export const refreshToken = async (
-  refreshToken: string
+  refreshToken: string,
 ): Promise<TokenResponse> => {
   const response = await fetch(`${config.API_BASE_URL}/auth/refresh`, {
     method: "POST",
@@ -86,7 +86,7 @@ export const logout = async (): Promise<void> => {
     console.error("Logout request failed:", error);
   } finally {
     // Clear user data from localStorage
-    this.clearStoredData();
+    clearStoredData();
   }
 };
 

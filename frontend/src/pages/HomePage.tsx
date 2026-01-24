@@ -1,5 +1,4 @@
 import { useUser } from "../hooks/useAuth.ts";
-import { useState } from "react";
 import Header from "../components/Header.tsx";
 import Loading from "../components/Loading.tsx";
 import ProfileCard from "../components/ProfileCard.tsx";
