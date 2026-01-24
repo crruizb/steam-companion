@@ -1,4 +1,4 @@
-let API_URL = "https://steam-companion.dpdns.org/api";
+let API_URL = "https://api.steam-companion.dpdns.org/api";
 const isLocalhost =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
