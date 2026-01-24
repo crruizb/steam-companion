@@ -9,13 +9,25 @@ export function getColor(count: number): string {
 }
 
 export function fillMissingDays(
-  days: AchievementsPerDate[]
+  days: AchievementsPerDate[],
+  year?: number
 ): AchievementsPerDate[] {
-  if (days.length === 0) return [];
+  if (days.length === 0 && !year) return [];
 
   const result: AchievementsPerDate[] = [];
-  const start = new Date(days[0].unlockDate);
-  const end = new Date(days[days.length - 1].unlockDate);
+
+  // If year is provided, use the full year range
+  let start: Date;
+  let end: Date;
+
+  if (year) {
+    start = new Date(year, 0, 1); // January 1 of the year
+    end = new Date(year, 11, 31); // December 31 of the year
+  } else {
+    start = new Date(days[0].unlockDate);
+    end = new Date(days[days.length - 1].unlockDate);
+  }
+
   const map = new Map(days.map((d) => [d.unlockDate, d.count]));
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {

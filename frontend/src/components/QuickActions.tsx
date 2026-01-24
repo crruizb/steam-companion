@@ -31,7 +31,6 @@ export default function QuickActions() {
       name: randomGame?.name || "",
       imgUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${randomGame?.appId}/header.jpg`,
     });
-    console.log(gameInfo);
     setOpenModal(true);
   };
 

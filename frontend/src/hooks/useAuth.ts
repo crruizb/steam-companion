@@ -83,8 +83,6 @@ export function useLogout() {
     },
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: authKeys.all });
-
-      console.log("User logged out successfully");
     },
     onError: (error) => {
       clearStoredData();
@@ -110,7 +108,6 @@ export function useRefreshToken() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: authKeys.user() });
-      console.log("Token refreshed successfully");
     },
     onError: (error) => {
       clearStoredData();

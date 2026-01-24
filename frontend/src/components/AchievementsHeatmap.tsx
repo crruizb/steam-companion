@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAchievements } from "../hooks/useAchievements";
 import {
   fillMissingDays,
@@ -10,24 +11,44 @@ export default function AchievementsHeatmap() {
   const { data: achievementsHeatmap } = useAchievements();
   const keys = Object.keys(achievementsHeatmap?.achievementsPerDate || {});
   const lastKey = keys[keys.length - 1];
-  const days = achievementsHeatmap?.achievementsPerDate[Number(lastKey)];
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
-  if (!days || days.length === 0) {
+  // Use lastKey if selectedYear hasn't been set yet
+  const activeYear = selectedYear ?? (lastKey ? Number(lastKey) : null);
+
+  const days = activeYear
+    ? achievementsHeatmap?.achievementsPerDate[activeYear]
+    : undefined;
+
+  if (!activeYear || !days || days.length === 0) {
     return <div>No achievements data available.</div>;
   }
 
-  const normalized = fillMissingDays(days);
+  const normalized = fillMissingDays(days, activeYear);
   const weeks = groupByWeeks(normalized);
   const monthLabels = generateMonthLabels(weeks);
 
   const nAchievements = normalized.reduce((total, day) => total + day.count, 0);
 
-  console.log(days);
-
   return (
     <div className="flex overflow-x-auto md:overflow-x-visible mt-4">
       <div className="flex flex-col">
-        <span className="text-xl">{nAchievements} achievements in 2025</span>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xl">
+            {nAchievements} achievements in {activeYear}
+          </span>
+          <select
+            value={activeYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="px-3 py-1 border rounded-md bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {keys.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="mt-2 px-2 border p-2 rounded-lg bg-white shadow-xl">
           {/* Month labels */}
           <div className="relative mb-1 h-4">

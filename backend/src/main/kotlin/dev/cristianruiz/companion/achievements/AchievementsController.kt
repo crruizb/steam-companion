@@ -25,7 +25,6 @@ class AchievementsController(
 
     @GetMapping
     fun getAchievements(authentication: Authentication): ResponseEntity<AchievementsHeatmap> {
-        println("test")
         val user = authentication.principal as User
         val heatmap = achievementsService.achievementsHeatmap(user)
 

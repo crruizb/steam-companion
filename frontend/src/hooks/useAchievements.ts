@@ -13,7 +13,6 @@ export const achievementsKeys = {
 };
 
 export function useImportAchievements() {
-  console.log("importing achievements...");
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: achievementsKeys.import(),
@@ -22,16 +21,15 @@ export function useImportAchievements() {
     },
     onSuccess: () => {
       toast.dismiss();
-      toast.success("Achievements imported successfully!");
+      toast.success(
+        "Queued import of achievements from Steam... Please refresh in a moment."
+      );
       queryClient.invalidateQueries({ queryKey: achievementsKeys.user() });
     },
     onError: (error) => {
       toast.dismiss();
       toast.error("Could not import achievements. Please try again.");
       console.error(error);
-    },
-    onMutate: () => {
-      toast.loading("Importing achievements from Steam...");
     },
   });
 }
