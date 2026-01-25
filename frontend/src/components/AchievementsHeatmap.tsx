@@ -25,6 +25,7 @@ export default function AchievementsHeatmap() {
   }
 
   const normalized = fillMissingDays(days, activeYear);
+
   const weeks = groupByWeeks(normalized);
   const monthLabels = generateMonthLabels(weeks);
 

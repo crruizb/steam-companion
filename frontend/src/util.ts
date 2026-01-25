@@ -8,9 +8,16 @@ export function getColor(count: number): string {
   return "bg-green-700";
 }
 
+function toLocalISODate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function fillMissingDays(
   days: AchievementsPerDate[],
-  year?: number
+  year?: number,
 ): AchievementsPerDate[] {
   if (days.length === 0 && !year) return [];
 
@@ -21,8 +28,8 @@ export function fillMissingDays(
   let end: Date;
 
   if (year) {
-    start = new Date(year, 0, 1); // January 1 of the year
-    end = new Date(year, 11, 31); // December 31 of the year
+    start = new Date(year, 0, 1);
+    end = new Date(year, 11, 31);
   } else {
     start = new Date(days[0].unlockDate);
     end = new Date(days[days.length - 1].unlockDate);
@@ -31,15 +38,16 @@ export function fillMissingDays(
   const map = new Map(days.map((d) => [d.unlockDate, d.count]));
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const date = d.toISOString().slice(0, 10);
+    const date = toLocalISODate(d);
     result.push({ unlockDate: date, count: map.get(date) ?? 0 });
   }
 
+  console.log(result);
   return result;
 }
 
 export function groupByWeeks(
-  days: AchievementsPerDate[]
+  days: AchievementsPerDate[],
 ): AchievementsPerDate[][] {
   if (days.length === 0) return [];
 
@@ -76,7 +84,7 @@ export type MonthLabel = {
 };
 
 export function generateMonthLabels(
-  weeks: AchievementsPerDate[][]
+  weeks: AchievementsPerDate[][],
 ): MonthLabel[] {
   const labels: MonthLabel[] = [];
   let lastMonth = -1;
