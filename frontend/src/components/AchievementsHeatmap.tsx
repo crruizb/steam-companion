@@ -34,7 +34,7 @@ export default function AchievementsHeatmap() {
   return (
     <div className="flex overflow-x-auto md:overflow-x-visible mt-4">
       <div className="flex flex-col">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center md:justify-between sm:justify-start space-x-4 mb-2">
           <span className="text-xl">
             {nAchievements} achievements in {activeYear}
           </span>

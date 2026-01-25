@@ -82,16 +82,15 @@ export function useLogout() {
       await logout();
     },
     onSuccess: () => {
-      queryClient.removeQueries({ queryKey: authKeys.all });
+      queryClient.clear();
+      window.location.reload();
     },
     onError: (error) => {
       clearStoredData();
-      queryClient.removeQueries({ queryKey: authKeys.all });
+      queryClient.clear();
+      window.location.reload();
 
       console.error("Logout error:", error);
-    },
-    onSettled: () => {
-      queryClient.removeQueries({ queryKey: authKeys.all });
     },
   });
 }

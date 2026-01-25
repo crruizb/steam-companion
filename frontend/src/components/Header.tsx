@@ -20,7 +20,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo/Title */}
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="sm:text-sm md:text-2xl font-bold text-gray-900">
               Steam Companion
             </h1>
           </div>
@@ -28,7 +28,7 @@ export default function Header() {
           {/* User Section */}
           {user ? (
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
+              <div className="hidden sm:flex items-center space-x-3">
                 {user.avatarUrl && (
                   <img
                     src={user.avatarUrl}
