@@ -16,4 +16,7 @@ interface AchievementsRepository: JpaRepository<Achievements, Long> {
             "GROUP BY 1 " +
             "ORDER BY 1")
     fun getAchievementsGroupedByUnlockTime(userId: Long): List<AchievementsPerSqlDate>
+
+    @Query("SELECT a.name FROM Achievements a WHERE a.userId = :userId AND a.appId = :appId")
+    fun findNamesByUserIdAndAppId(userId: Long, appId: Int): List<String>
 }

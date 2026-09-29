@@ -5,24 +5,17 @@ import dev.cristianruiz.companion.achievements.dto.AchievementsPerDate
 import dev.cristianruiz.companion.achievements.entity.Achievements
 import dev.cristianruiz.companion.exceptions.BadRequestException
 import dev.cristianruiz.companion.games.GamesRepository
-import dev.cristianruiz.companion.games.GamesService
 import dev.cristianruiz.companion.steam.SteamUserApiClient
 import dev.cristianruiz.companion.user.entity.User
-import jakarta.persistence.EntityManager
-import jakarta.persistence.Tuple
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneOffset
-import java.util.Calendar
 
 @Service
 class AchievementsService(
@@ -32,44 +25,50 @@ class AchievementsService(
 ) {
 
     private val importScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val log = LoggerFactory.getLogger(GamesService::class.java)
+    private val log = LoggerFactory.getLogger(AchievementsService::class.java)
 
 
-     fun importAchievements(user: User) {
+    fun importAchievements(user: User) {
         val userGames = gamesRepository.findByUserId(user.id)
         if (userGames.isEmpty()) {
             throw BadRequestException("User has no games imported")
         }
+        // Games are processed one at a time so the delay actually throttles requests to the Steam API
         importScope.launch {
-            supervisorScope {
-                userGames.forEach { ug ->
-                    launch {
-                        try {
-                            val achievementsResponse = steamUserApiClient.getPlayerAchievements(
-                                steamId = user.steamId,
-                                appId = ug.id.appId
-                            )
-                            val achievements = achievementsResponse?.playerStats?.achievements ?: return@launch
-                            val achievementsEntity = achievements.mapNotNull {
-                                if (it.achieved == 0) return@mapNotNull null // Skip unachieved achievements
-                                Achievements(
-                                    userId = user.id,
-                                    appId = ug.id.appId,
-                                    name = it.apiName,
-                                    achieved = it.achieved == 1,
-                                    unlockTime = Instant.ofEpochSecond(it.unlockTime)
-                                        .atOffset(ZoneOffset.UTC)
-                                )
-                            }
-
-                            achievementsRepository.saveAll(achievementsEntity)
-                            delay(500L) // To avoid hitting Steam API rate limits
-                        } catch (e: Exception) {
-                            log.warn("Failed to import achievements for game: ${ug.name}, error: ${e.message}")
-                        }
-                    }
-                }
+            userGames.forEach { ug ->
+                importGameAchievements(user, ug.id.appId, ug.name)
+                delay(500L) // To avoid hitting Steam API rate limits
             }
+        }
+    }
+
+    internal fun importGameAchievements(user: User, appId: Int, gameName: String) {
+        try {
+            val achievementsResponse = steamUserApiClient.getPlayerAchievements(
+                steamId = user.steamId,
+                appId = appId
+            )
+            val achievements = achievementsResponse?.playerStats?.achievements ?: return
+            // Skip achievements imported previously, so re-imports only add newly unlocked ones
+            val alreadyImported = achievementsRepository.findNamesByUserIdAndAppId(user.id, appId).toSet()
+            val achievementsEntity = achievements
+                .filter { it.achieved == 1 && it.apiName !in alreadyImported }
+                .map {
+                    Achievements(
+                        userId = user.id,
+                        appId = appId,
+                        name = it.apiName,
+                        achieved = true,
+                        unlockTime = Instant.ofEpochSecond(it.unlockTime)
+                            .atOffset(ZoneOffset.UTC)
+                    )
+                }
+
+            if (achievementsEntity.isNotEmpty()) {
+                achievementsRepository.saveAll(achievementsEntity)
+            }
+        } catch (e: Exception) {
+            log.warn("Failed to import achievements for game: $gameName, error: ${e.message}")
         }
     }
 
