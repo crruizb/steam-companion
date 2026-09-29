@@ -1,19 +1,19 @@
 package dev.cristianruiz.companion.auth
 
-import dev.cristianruiz.companion.auth.dto.AuthResponse
-import dev.cristianruiz.companion.auth.dto.RefreshTokenRequest
-import dev.cristianruiz.companion.auth.dto.TokenResponse
 import dev.cristianruiz.companion.user.UserService
-import jakarta.servlet.http.Cookie
+import dev.cristianruiz.companion.user.dto.UserDto
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.view.RedirectView
 import java.net.URLEncoder.encode
 import java.nio.charset.StandardCharsets
+import java.time.Duration
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,6 +25,9 @@ class AuthController(
 
     @Value("\${app.frontend.url}")
     private lateinit var frontendUrl: String
+
+    @Value("\${app.cookie.same-site:Lax}")
+    private lateinit var cookieSameSite: String
 
     private val log = LoggerFactory.getLogger(AuthController::class.java)
 
@@ -39,26 +42,7 @@ class AuthController(
         return try {
             val user = steamOpenIdService.verifyAndGetUser(params)
             if (user != null) {
-                val accessToken = jwtService.generateAccessToken(user)
-                val refreshToken = jwtService.generateRefreshToken(user)
-
-                val accessCookie = Cookie("accessToken", accessToken).apply {
-                    isHttpOnly = true
-                    secure = true
-                    maxAge = 60 * 60 * 24 // 24 hours
-                    path = "/"
-                }
-
-                val refreshCookie = Cookie("refreshToken", refreshToken).apply {
-                    isHttpOnly = true
-                    secure = true
-                    maxAge = 60 * 60 * 24 * 30
-                    path = "/"
-                }
-
-                response.addCookie(accessCookie)
-                response.addCookie(refreshCookie)
-
+                setAuthCookies(response, user)
                 // The frontend loads the user from /api/user/me using the cookies set above
                 RedirectView("$frontendUrl/auth/callback?success=true")
             } else {
@@ -76,27 +60,25 @@ class AuthController(
     }
 
     @PostMapping("/refresh")
-    fun refreshToken(@RequestBody request: RefreshTokenRequest): ResponseEntity<TokenResponse> {
-        if (!jwtService.isRefreshToken(request.refreshToken)) {
-            return ResponseEntity.badRequest().build()
-        }
-
-        val steamId = jwtService.extractSteamId(request.refreshToken)
-        if (!jwtService.isTokenValid(request.refreshToken, steamId)) {
+    fun refreshToken(
+        @CookieValue(REFRESH_COOKIE, required = false) refreshToken: String?,
+        response: HttpServletResponse
+    ): ResponseEntity<Void> {
+        val isValid = refreshToken != null && runCatching { jwtService.isRefreshTokenValid(refreshToken) }.getOrDefault(false)
+        if (!isValid) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         }
 
-        val user = userService.findBySteamId(steamId) ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+        val user = userService.findBySteamId(jwtService.extractSteamId(refreshToken!!))
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
 
-        val newAccessToken = jwtService.generateAccessToken(user)
-        val newRefreshToken = jwtService.generateRefreshToken(user)
-
-        jwtService.revokeRefreshToken(request.refreshToken)
-        return ResponseEntity.ok(TokenResponse(newAccessToken, newRefreshToken))
+        jwtService.revokeRefreshToken(refreshToken)
+        setAuthCookies(response, user)
+        return ResponseEntity.noContent().build()
     }
 
     @PostMapping("/logout")
-    fun logout(@CookieValue("refreshToken", required = false) refreshToken: String?, response: HttpServletResponse): ResponseEntity<Void> {
+    fun logout(@CookieValue(REFRESH_COOKIE, required = false) refreshToken: String?, response: HttpServletResponse): ResponseEntity<Void> {
         refreshToken?.let { token ->
             try {
                 val steamId = jwtService.extractSteamId(token)
@@ -106,22 +88,38 @@ class AuthController(
             }
         }
 
-        val accessCookie = Cookie("accessToken", "").apply {
-            isHttpOnly = true
-            secure = true
-            maxAge = 0
-            path = "/"
-        }
-        val refreshCookie = Cookie("refreshToken", "").apply {
-            isHttpOnly = true
-            secure = true
-            maxAge = 0
-            path = "/"
-        }
-
-        response.addCookie(accessCookie)
-        response.addCookie(refreshCookie)
+        addCookie(response, ACCESS_COOKIE, "", ACCESS_COOKIE_PATH, Duration.ZERO)
+        addCookie(response, REFRESH_COOKIE, "", REFRESH_COOKIE_PATH, Duration.ZERO)
 
         return ResponseEntity.noContent().build()
+    }
+
+    private fun setAuthCookies(response: HttpServletResponse, user: UserDto) {
+        addCookie(
+            response, ACCESS_COOKIE, jwtService.generateAccessToken(user),
+            ACCESS_COOKIE_PATH, jwtService.accessTokenExpiration
+        )
+        addCookie(
+            response, REFRESH_COOKIE, jwtService.generateRefreshToken(user),
+            REFRESH_COOKIE_PATH, jwtService.refreshTokenExpiration
+        )
+    }
+
+    private fun addCookie(response: HttpServletResponse, name: String, value: String, path: String, maxAge: Duration) {
+        val cookie = ResponseCookie.from(name, value)
+            .httpOnly(true)
+            .secure(true)
+            .sameSite(cookieSameSite)
+            .path(path)
+            .maxAge(maxAge)
+            .build()
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString())
+    }
+
+    companion object {
+        const val ACCESS_COOKIE = "accessToken"
+        const val REFRESH_COOKIE = "refreshToken"
+        private const val ACCESS_COOKIE_PATH = "/"
+        private const val REFRESH_COOKIE_PATH = "/api/auth"
     }
 }

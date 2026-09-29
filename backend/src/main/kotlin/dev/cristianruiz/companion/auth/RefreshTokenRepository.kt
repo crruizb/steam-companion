@@ -9,7 +9,7 @@ import java.time.OffsetDateTime
 
 @Repository
 interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {
-    fun findByToken(token: String): RefreshToken?
+    fun findByTokenHash(tokenHash: String): RefreshToken?
     fun deleteByExpiryDateBefore(date: OffsetDateTime)
 
     @Modifying

@@ -16,8 +16,9 @@ open class RefreshToken(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
-    @Column(unique = true, nullable = false)
-    val token: String,
+    // SHA-256 hash of the token; the token itself is never stored
+    @Column(name = "token_hash", unique = true, nullable = false)
+    val tokenHash: String,
 
     @Column(nullable = false)
     val steamId: String,

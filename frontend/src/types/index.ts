@@ -22,15 +22,6 @@ export interface AuthResponse {
   error?: string;
 }
 
-export interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface RefreshTokenRequest {
-  refreshToken: string;
-}
-
 export interface AchievementsPerDate {
   unlockDate: string;
   count: number;

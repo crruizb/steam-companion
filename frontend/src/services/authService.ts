@@ -1,5 +1,5 @@
-import type { RefreshTokenRequest, TokenResponse } from "../types";
 import config from "../config";
+import { apiFetch } from "./api";
 
 const storageKey = "user";
 
@@ -8,27 +8,6 @@ const storageKey = "user";
  */
 export const initiateSteamLogin = (): void => {
   window.location.href = `${config.API_BASE_URL}/auth/steam/login`;
-};
-
-/**
- * Refreshes the access token using a refresh token
- */
-export const refreshToken = async (
-  refreshToken: string,
-): Promise<TokenResponse> => {
-  const response = await fetch(`${config.API_BASE_URL}/auth/refresh`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ refreshToken } as RefreshTokenRequest),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to refresh token");
-  }
-
-  return response.json();
 };
 
 /**
@@ -54,13 +33,7 @@ export const checkAuthenticationStatus = async (): Promise<boolean> => {
  * Fetch user data from the API
  */
 export const fetchUserData = async (): Promise<any> => {
-  const response = await fetch(`${config.API_BASE_URL}/user/me`, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await apiFetch("/user/me", { method: "GET" });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch user data: ${response.status}`);

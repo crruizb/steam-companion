@@ -1,13 +1,7 @@
-import config from "../config";
+import { apiFetch } from "./api";
 
 export const importAchievementsFromUser = async () => {
-  const response = await fetch(`${config.API_BASE_URL}/achievements/import`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await apiFetch("/achievements/import", { method: "POST" });
 
   if (!response.ok) {
     throw new Error(`Failed to import achievements: ${response.status}`);
@@ -15,13 +9,7 @@ export const importAchievementsFromUser = async () => {
 };
 
 export const achievementsFromUser = async () => {
-  const response = await fetch(`${config.API_BASE_URL}/achievements`, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await apiFetch("/achievements", { method: "GET" });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch achievements: ${response.status}`);

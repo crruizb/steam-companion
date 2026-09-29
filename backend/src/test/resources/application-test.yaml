@@ -13,9 +13,9 @@ spring:
     enabled: true
 
 # JWT configuration for tests
-jwt:
-  secret: test-secret-key-that-is-long-enough-for-hs256-algorithm
-  expiration: 86400000 # 24 hours in milliseconds
+app:
+  jwt:
+    secret: dGVzdC1zZWNyZXQta2V5LXRoYXQtaXMtbG9uZy1lbm91Z2gtZm9yLWhzMjU2LWFsZ29yaXRobQ==
 
 logging:
   level:

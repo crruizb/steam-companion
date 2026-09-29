@@ -1,13 +1,7 @@
-import config from "../config";
+import { apiFetch } from "./api";
 
 export const importGamesFromSteam = async () => {
-    const response = await fetch(`${config.API_BASE_URL}/games/import`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    });
+    const response = await apiFetch("/games/import", { method: "POST" });
 
     if (!response.ok) {
         // The backend returns { message } for known failures, e.g. a private Steam profile
@@ -17,13 +11,7 @@ export const importGamesFromSteam = async () => {
 }
 
 export const fetchOwnedGames = async () => {
-    const response = await fetch(`${config.API_BASE_URL}/user/games`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    });
+    const response = await apiFetch("/user/games", { method: "GET" });
 
     if (!response.ok) {
         throw new Error(`Failed to fetch owned games: ${response.status}`)

@@ -26,9 +26,11 @@ spring:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:YourSuperSecretJWTKeyThatShouldBeAtLeast32CharactersLong}
+    # Base64-encoded, at least 32 bytes. No default on purpose: startup fails if it's missing.
+    # Generate one with: openssl rand -base64 48
+    secret: ${JWT_SECRET}
     access-token:
-      expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+      expiration: ${JWT_EXPIRATION:900000} # 15 minutes in milliseconds; the frontend refreshes it
     refresh-token:
       expiration: 2592000000  # 30 days in milliseconds
   steam:
@@ -38,4 +40,8 @@ app:
       return-to: ${STEAM_OPENID_RETURN_TO:http://localhost:8080/api/auth/steam/callback}
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}
+  cookie:
+    # Lax blocks auth cookies on cross-site POSTs (CSRF). Use None only if the frontend
+    # is served from a different site than the API.
+    same-site: ${COOKIE_SAME_SITE:Lax}
 

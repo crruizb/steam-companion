@@ -10,9 +10,13 @@ import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.security.MessageDigest
+import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.Date
+import java.util.HexFormat
+import java.util.UUID
 import javax.crypto.SecretKey
 
 @Service
@@ -23,14 +27,20 @@ open class JwtService(
     @Value("\${app.jwt.secret}")
     private lateinit var jwtSecret: String
 
-    @Value("\${app.jwt.access-token.expiration:86400000}")
-    private var accessTokenExpirationInMs: Long = 86400000
+    @Value("\${app.jwt.access-token.expiration:900000}")
+    private var accessTokenExpirationInMs: Long = 900000
 
     @Value("\${app.jwt.refresh-token.expiration:2592000000}")
     private var refreshTokenExpirationInMs: Long = 2592000000
 
     private val ACCESS_TOKEN = "ACCESS"
     private val REFRESH_TOKEN = "REFRESH"
+
+    val accessTokenExpiration: Duration
+        get() = Duration.ofMillis(accessTokenExpirationInMs)
+
+    val refreshTokenExpiration: Duration
+        get() = Duration.ofMillis(refreshTokenExpirationInMs)
 
     fun generateAccessToken(user: UserDto): String {
         return generateToken(user, accessTokenExpirationInMs, ACCESS_TOKEN)
@@ -40,7 +50,7 @@ open class JwtService(
         val token = generateToken(user, refreshTokenExpirationInMs, REFRESH_TOKEN)
 
         val refreshToken = RefreshToken(
-            token = token,
+            tokenHash = hashToken(token),
             steamId = user.steamId,
             expiryDate = Date(System.currentTimeMillis() + refreshTokenExpirationInMs).toInstant()
                 .atOffset(java.time.ZoneOffset.UTC)
@@ -55,6 +65,7 @@ open class JwtService(
         val expiryDate = Date(now.time + expirationTime)
 
         return Jwts.builder()
+            .id(UUID.randomUUID().toString())
             .subject(user.steamId)
             .claim("userId", user.steamId)
             .claim("username", user.username)
@@ -77,18 +88,19 @@ open class JwtService(
         return extractTokenType(token) == REFRESH_TOKEN
     }
 
+    /**
+     * Validates a token used to call the API. Only access tokens are accepted:
+     * refresh tokens live much longer and must only be usable at /api/auth/refresh.
+     */
     fun isTokenValid(token: String, steamId: String): Boolean {
-        val extractedSteamId = extractSteamId(token)
-        val isRefreshToken = isRefreshToken(token)
-        return if (isRefreshToken) {
-            isRefreshTokenValid(token)
-        } else {
-            extractedSteamId == steamId && !isTokenExpired(token)
-        }
+        return extractTokenType(token) == ACCESS_TOKEN &&
+            extractSteamId(token) == steamId &&
+            !isTokenExpired(token)
     }
 
     fun isRefreshTokenValid(token: String): Boolean {
-        val storedToken = refreshTokenRepository.findByToken(token) ?: return false
+        if (!isRefreshToken(token)) return false
+        val storedToken = refreshTokenRepository.findByTokenHash(hashToken(token)) ?: return false
         if (storedToken.isRevoked) return false
         if (storedToken.expiryDate.isBefore(Date().toInstant().atOffset(ZoneOffset.UTC))) return false
         return true
@@ -120,8 +132,14 @@ open class JwtService(
         return Keys.hmacShaKeyFor(keyBytes)
     }
 
+    // Only a SHA-256 hash is stored, so a leaked refresh_tokens table can't be used to log in
+    private fun hashToken(token: String): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(token.toByteArray(Charsets.UTF_8))
+        return HexFormat.of().formatHex(digest)
+    }
+
     fun revokeRefreshToken(token: String) {
-        refreshTokenRepository.findByToken(token)?.let { refreshToken ->
+        refreshTokenRepository.findByTokenHash(hashToken(token))?.let { refreshToken ->
             refreshToken.isRevoked = true
             refreshTokenRepository.save(refreshToken)
         }

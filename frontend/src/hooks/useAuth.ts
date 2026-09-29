@@ -5,7 +5,6 @@ import {
   fetchUserData,
   getStoredUser,
   logout,
-  refreshToken,
   storeUser,
 } from "../services/authService.ts";
 
@@ -91,27 +90,6 @@ export function useLogout() {
       window.location.reload();
 
       console.error("Logout error:", error);
-    },
-  });
-}
-
-/**
- * Hook for token refresh mutation
- */
-export function useRefreshToken() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (refreshTkn: string) => {
-      return await refreshToken(refreshTkn);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: authKeys.user() });
-    },
-    onError: (error) => {
-      clearStoredData();
-      queryClient.removeQueries({ queryKey: authKeys.all });
-      console.error("Token refresh failed:", error);
     },
   });
 }
