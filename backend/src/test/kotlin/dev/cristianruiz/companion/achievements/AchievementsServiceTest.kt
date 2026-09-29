@@ -1,5 +1,7 @@
 package dev.cristianruiz.companion.achievements
 
+import dev.cristianruiz.companion.achievements.dto.AchievementsPerDate
+import dev.cristianruiz.companion.achievements.dto.AchievementsPerSqlDate
 import dev.cristianruiz.companion.achievements.entity.Achievements
 import dev.cristianruiz.companion.games.GamesRepository
 import dev.cristianruiz.companion.steam.Achievement
@@ -14,6 +16,8 @@ import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
+import java.sql.Date
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -89,5 +93,42 @@ class AchievementsServiceTest {
 
         // Then
         verify(exactly = 0) { achievementsRepository.saveAll(any<List<Achievements>>()) }
+    }
+
+    @Test
+    fun `should group achievements per day by year for the heatmap`() {
+        // Given
+        every { achievementsRepository.getAchievementsGroupedByUnlockTime(user.id) } returns listOf(
+            AchievementsPerSqlDate(Date.valueOf("2024-12-31"), 3),
+            AchievementsPerSqlDate(Date.valueOf("2025-01-01"), 1),
+            AchievementsPerSqlDate(Date.valueOf("2025-03-15"), 5)
+        )
+
+        // When
+        val heatmap = achievementsService.achievementsHeatmap(user)
+
+        // Then
+        assertEquals(
+            mapOf(
+                2024 to listOf(AchievementsPerDate(LocalDate.of(2024, 12, 31), 3)),
+                2025 to listOf(
+                    AchievementsPerDate(LocalDate.of(2025, 1, 1), 1),
+                    AchievementsPerDate(LocalDate.of(2025, 3, 15), 5)
+                )
+            ),
+            heatmap.achievementsPerDate
+        )
+    }
+
+    @Test
+    fun `should return an empty heatmap when there are no achievements`() {
+        // Given
+        every { achievementsRepository.getAchievementsGroupedByUnlockTime(user.id) } returns emptyList()
+
+        // When
+        val heatmap = achievementsService.achievementsHeatmap(user)
+
+        // Then
+        assertEquals(emptyMap(), heatmap.achievementsPerDate)
     }
 }

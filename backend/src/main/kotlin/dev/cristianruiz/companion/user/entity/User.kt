@@ -14,7 +14,7 @@ import jakarta.persistence.Table
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
-import java.time.LocalDateTime
+import java.time.Instant
 
 @Entity
 @Table(name = "users")
@@ -41,11 +41,11 @@ class User(
 
     @CreatedDate
     @Column(name = "created_at")
-    var createdAt: LocalDateTime? = null,
+    var createdAt: Instant? = null,
 
     @LastModifiedDate
     @Column(name = "updated_at")
-    var updatedAt: LocalDateTime? = null,
+    var updatedAt: Instant? = null,
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
     var userGames: MutableSet<UserGames> = mutableSetOf()

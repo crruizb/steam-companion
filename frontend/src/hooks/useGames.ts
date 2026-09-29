@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User } from "../types";
 import {
   fetchOwnedGames,
+  fetchRandomGame,
   importGamesFromSteam,
 } from "../services/gamesService.ts";
 import { isAuthError } from "../services/api.ts";
@@ -46,5 +47,14 @@ export function useUserGames() {
     gcTime: 1000 * 60 * 30, // 30 minutes
     // Don't retry on 401/403 - user is not authenticated
     retry: (failureCount, error) => !isAuthError(error) && failureCount < 2,
+  });
+}
+
+export function useRandomGame() {
+  return useMutation({
+    mutationFn: fetchRandomGame,
+    onError: (error) => {
+      toast.error(error.message);
+    },
   });
 }

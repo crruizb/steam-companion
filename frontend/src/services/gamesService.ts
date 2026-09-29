@@ -1,3 +1,4 @@
+import type { Game } from "../types";
 import { apiFetch } from "./api";
 
 export const importGamesFromSteam = async () => {
@@ -19,4 +20,17 @@ export const fetchOwnedGames = async () => {
 
     const data = await response.json()
     return data
+}
+
+export const fetchRandomGame = async (): Promise<Game> => {
+    const response = await apiFetch("/games/random", { method: "GET" });
+
+    if (response.status === 404) {
+        throw new Error("Import your games first, then we can pick one for you.")
+    }
+    if (!response.ok) {
+        throw new Error("Could not pick a random game. Please try again.")
+    }
+
+    return response.json()
 }

@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useImportGames, useUserGames } from "../hooks/useGames";
+import { useImportGames, useRandomGame } from "../hooks/useGames";
 import Modal from "./Modal";
 import { useImportAchievements } from "../hooks/useAchievements";
 
 export default function QuickActions() {
   const { mutate: importGames } = useImportGames();
   const { mutate: importAchievements } = useImportAchievements();
-  const { data: user } = useUserGames();
+  const { mutate: pickRandomGame } = useRandomGame();
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [gameInfo, setGameInfo] = useState({
     name: "",
@@ -22,16 +22,16 @@ export default function QuickActions() {
   };
 
   const handleRandomGame = () => {
-    // Placeholder for random game logic
-    const randomGameIdx = user?.ownedGames
-      ? [Math.floor(Math.random() * user.ownedGames.length)][0]
-      : 0;
-    const randomGame = user?.ownedGames ? user.ownedGames[randomGameIdx] : null;
-    setGameInfo({
-      name: randomGame?.name || "",
-      imgUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${randomGame?.appId}/header.jpg`,
+    // The backend picks the game; with no games imported it returns 404 and a toast explains why
+    pickRandomGame(undefined, {
+      onSuccess: (game) => {
+        setGameInfo({
+          name: game.name,
+          imgUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appId}/header.jpg`,
+        });
+        setOpenModal(true);
+      },
     });
-    setOpenModal(true);
   };
 
   return (

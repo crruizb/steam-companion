@@ -151,7 +151,8 @@ open class JwtService(
     }
 
     @Scheduled(fixedRate = 3600000) // Run every hour
-    fun cleanupExpiredTokens() {
+    @Transactional
+    open fun cleanupExpiredTokens() {
         refreshTokenRepository.deleteByExpiryDateBefore(OffsetDateTime.now())
     }
 }

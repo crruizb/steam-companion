@@ -1,5 +1,6 @@
 package dev.cristianruiz.companion.auth
 
+import dev.cristianruiz.companion.auth.entity.RefreshToken
 import dev.cristianruiz.companion.user.UserRepository
 import dev.cristianruiz.companion.user.dto.UserDto
 import dev.cristianruiz.companion.user.entity.User
@@ -20,6 +21,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import java.time.OffsetDateTime
+import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
@@ -119,5 +122,17 @@ class AuthControllerIntegrationTest {
         val stored = refreshTokenRepository.findAll().single()
         assertNotEquals(refreshToken, stored.tokenHash)
         assertTrue(stored.tokenHash.matches(Regex("[0-9a-f]{64}")), stored.tokenHash)
+    }
+
+    @Test
+    fun `cleanup should delete only expired refresh tokens`() {
+        refreshTokenRepository.save(
+            RefreshToken(tokenHash = "expired", steamId = testUserDto.steamId, expiryDate = OffsetDateTime.now().minusDays(1))
+        )
+        jwtService.generateRefreshToken(testUserDto)
+
+        jwtService.cleanupExpiredTokens()
+
+        assertEquals(listOf(false), refreshTokenRepository.findAll().map { it.tokenHash == "expired" })
     }
 }
