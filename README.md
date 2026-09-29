@@ -77,21 +77,24 @@ The project uses GitHub Actions for continuous integration and deployment. The w
 
 ### Workflow Overview
 
-The CI/CD pipeline consists of two jobs:
+The pipeline runs on pushes to `main`, pull requests, and manual dispatch. It has three jobs:
 
-#### 1. Build Job
+#### 1. Backend Job
 
-- Triggers on push to `main`, pull requests, or manual dispatch
 - Sets up JDK 25 with Gradle caching
-- Builds the backend with `./gradlew clean build`
-- Uploads the JAR artifact for the deploy job
+- Builds and tests the backend with `./gradlew clean build` (integration tests start Postgres with Testcontainers)
+- Uploads the test reports if the build fails, and the JAR artifact for the deploy job
 
-#### 2. Deploy Job
+#### 2. Frontend Job
 
-- Runs after successful build
-- Downloads the JAR artifact
-- Builds a Docker image with a timestamp tag
-- Pushes to DockerHub with both timestamped and `latest` tags
+- Installs dependencies with pnpm (`--frozen-lockfile`)
+- Runs `pnpm lint` and `pnpm build`
+
+#### 3. Deploy Job
+
+- Runs only on `main` (never for pull requests), after the backend job succeeds
+- Downloads the JAR artifact and builds a Docker image
+- Pushes it to DockerHub with three tags: the build date (`YYYYMMDDHHMMSS`, used as the version), the short commit SHA, and `latest`
 
 ### Required GitHub Secrets
 

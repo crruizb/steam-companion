@@ -7,6 +7,7 @@ import {
   logout,
   storeUser,
 } from "../services/authService.ts";
+import { isAuthError } from "../services/api.ts";
 
 // Query Keys
 export const authKeys = {
@@ -34,15 +35,12 @@ export function useUser() {
         }
 
         return null;
-      } catch (error: any) {
+      } catch (error) {
         // Check if we have stored data as fallback for network errors
         const storedUser = getStoredUser();
 
         // If it's a 401/403 error, clear stored data and return null
-        if (
-          error?.message?.includes("401") ||
-          error?.message?.includes("403")
-        ) {
+        if (isAuthError(error)) {
           clearStoredData();
           return null;
         }
@@ -59,13 +57,8 @@ export function useUser() {
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
-    retry: (failureCount, error: any) => {
-      // Don't retry on 401/403 - user is not authenticated
-      if (error?.message?.includes("401") || error?.message?.includes("403")) {
-        return false;
-      }
-      return failureCount < 2;
-    },
+    // Don't retry on 401/403 - user is not authenticated
+    retry: (failureCount, error) => !isAuthError(error) && failureCount < 2,
   });
 }
 

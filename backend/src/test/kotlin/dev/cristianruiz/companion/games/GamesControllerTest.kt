@@ -55,7 +55,7 @@ class GamesControllerTest {
     @Test
     @WithMockCustomUser
     fun `should import games for authenticated user`() {
-        Mockito.doNothing().`when`(gamesService).importGames(testUser)
+        Mockito.`when`(gamesService.importGames(testUser)).thenReturn("Game import started.")
         mockMvc.perform(
             post("/api/games/import")
                 .with(csrf())

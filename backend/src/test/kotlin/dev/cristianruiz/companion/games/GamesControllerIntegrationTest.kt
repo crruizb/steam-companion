@@ -110,7 +110,7 @@ class GamesControllerIntegrationTest {
 
         testUser = userRepository.save(testUser)
 
-        validJwtToken = jwtService.generateToken(testUserDto, 123, "ACCESS")
+        validJwtToken = jwtService.generateAccessToken(testUserDto)
     }
 
     @AfterEach

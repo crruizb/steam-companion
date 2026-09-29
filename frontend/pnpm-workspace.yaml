@@ -1,0 +1,5 @@
+# Dependencies allowed to run install scripts (pnpm refuses to install otherwise).
+# Both are Vite's build tools; their scripts set up the native binaries.
+allowBuilds:
+  '@swc/core': true
+  esbuild: true

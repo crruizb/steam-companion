@@ -4,6 +4,7 @@ import {
   achievementsFromUser,
   importAchievementsFromUser,
 } from "../services/achievementsService.ts";
+import { isAuthError } from "../services/api.ts";
 import type { AchievementsHeatmap } from "../types/index.ts";
 
 export const achievementsKeys = {
@@ -42,12 +43,7 @@ export function useAchievements() {
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
-    retry: (failureCount, error: any) => {
-      // Don't retry on 401/403 - user is not authenticated
-      if (error?.message?.includes("401") || error?.message?.includes("403")) {
-        return false;
-      }
-      return failureCount < 2;
-    },
+    // Don't retry on 401/403 - user is not authenticated
+    retry: (failureCount, error) => !isAuthError(error) && failureCount < 2,
   });
 }

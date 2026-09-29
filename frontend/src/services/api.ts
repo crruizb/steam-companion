@@ -22,6 +22,13 @@ export const refreshSession = (): Promise<boolean> => {
 };
 
 /**
+ * True when a request failed because the user isn't logged in (401/403).
+ * The services include the HTTP status in their error messages.
+ */
+export const isAuthError = (error: unknown): boolean =>
+  error instanceof Error && /\b40[13]\b/.test(error.message);
+
+/**
  * fetch() for the backend API: sends the auth cookies and, when the access token
  * has expired (401), refreshes the session once and retries the request.
  */

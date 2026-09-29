@@ -13,8 +13,10 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.verify
 import jakarta.servlet.FilterChain
+import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -63,6 +65,32 @@ class JwtAuthenticationFilterTest {
         SecurityContextHolder.setContext(securityContext)
         every { securityContext.authentication = any() } just Runs
         every { filterChain.doFilter(request, response) } just Runs
+        // Defaults: no cookies and nobody authenticated yet. Tests override these as needed.
+        every { request.cookies } returns null
+        every { securityContext.authentication } returns null
+    }
+
+    @AfterEach
+    fun tearDown() {
+        // The mocked context is thread-local: leaving it set breaks later tests on the same thread
+        SecurityContextHolder.clearContext()
+    }
+
+    @Test
+    fun `doFilterInternal should authenticate from the accessToken cookie`() {
+        // Given
+        every { request.getHeader("Authorization") } returns null
+        every { request.cookies } returns arrayOf(Cookie("accessToken", testJwt))
+        every { jwtService.extractSteamId(testJwt) } returns testSteamId
+        every { userService.findBySteamId(testSteamId) } returns testUserDto
+        every { jwtService.isTokenValid(testJwt, testSteamId) } returns true
+
+        // When
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)
+
+        // Then
+        verify { securityContext.authentication = any<SteamAuthenticationToken>() }
+        verify { filterChain.doFilter(request, response) }
     }
 
     @Test
@@ -168,7 +196,7 @@ class JwtAuthenticationFilterTest {
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)
 
         // Then
-        verify { jwtService.extractSteamId(testJwt) }
+        verify(exactly = 0) { jwtService.extractSteamId(any()) }
         verify(exactly = 0) { userService.findBySteamId(any()) }
         verify(exactly = 0) { jwtService.isTokenValid(any(), any()) }
         verify(exactly = 0) { securityContext.authentication = any() }
@@ -253,6 +281,7 @@ class JwtAuthenticationFilterTest {
     fun `doFilterInternal should handle empty Bearer token`() {
         // Given
         every { request.getHeader("Authorization") } returns "Bearer "
+        every { jwtService.extractSteamId("") } throws IllegalArgumentException("Empty token")
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)

@@ -1,3 +1,4 @@
+import type { User } from "../types";
 import config from "../config";
 import { apiFetch } from "./api";
 
@@ -32,7 +33,7 @@ export const checkAuthenticationStatus = async (): Promise<boolean> => {
 /**
  * Fetch user data from the API
  */
-export const fetchUserData = async (): Promise<any> => {
+export const fetchUserData = async (): Promise<User> => {
   const response = await apiFetch("/user/me", { method: "GET" });
 
   if (!response.ok) {
@@ -73,14 +74,14 @@ export const clearStoredData = (): void => {
 /**
  * Stores user data in localStorage
  */
-export const storeUser = (user: any): void => {
+export const storeUser = (user: User): void => {
   localStorage.setItem(storageKey, JSON.stringify(user));
 };
 
 /**
  * Retrieves stored user data from localStorage
  */
-export const getStoredUser = (): any | null => {
+export const getStoredUser = (): User | null => {
   const userData = localStorage.getItem(storageKey);
   return userData ? JSON.parse(userData) : null;
 };
