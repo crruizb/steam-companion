@@ -8,6 +8,11 @@ export function getColor(count: number): string {
   return "bg-green-700";
 }
 
+export function parseLocalDate(isoDate: string): Date {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function toLocalISODate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -31,8 +36,8 @@ export function fillMissingDays(
     start = new Date(year, 0, 1);
     end = new Date(year, 11, 31);
   } else {
-    start = new Date(days[0].unlockDate);
-    end = new Date(days[days.length - 1].unlockDate);
+    start = parseLocalDate(days[0].unlockDate);
+    end = parseLocalDate(days[days.length - 1].unlockDate);
   }
 
   const map = new Map(days.map((d) => [d.unlockDate, d.count]));
@@ -42,7 +47,6 @@ export function fillMissingDays(
     result.push({ unlockDate: date, count: map.get(date) ?? 0 });
   }
 
-  console.log(result);
   return result;
 }
 
@@ -55,7 +59,7 @@ export function groupByWeeks(
   const emptyDay = { unlockDate: "", count: 0 };
 
   // Pad beginning based on first day's day of week
-  const firstDayOfWeek = new Date(days[0].unlockDate).getDay();
+  const firstDayOfWeek = parseLocalDate(days[0].unlockDate).getDay();
   let currentWeek: AchievementsPerDate[] = Array(firstDayOfWeek).fill(emptyDay);
 
   days.forEach((day) => {
@@ -78,6 +82,16 @@ export function groupByWeeks(
   return weeks;
 }
 
+// Fisher-Yates shuffle. Returns a new array and leaves the input untouched.
+export function shuffle<T>(items: readonly T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 export type MonthLabel = {
   label: string;
   weekIndex: number;
@@ -93,11 +107,12 @@ export function generateMonthLabels(
     const firstValidDay = week.find((d) => d.unlockDate);
     if (!firstValidDay) return;
 
-    const month = new Date(firstValidDay.unlockDate).getMonth();
+    const date = parseLocalDate(firstValidDay.unlockDate);
+    const month = date.getMonth();
 
     if (month !== lastMonth) {
       labels.push({
-        label: new Date(firstValidDay.unlockDate).toLocaleString("en-US", {
+        label: date.toLocaleString("en-US", {
           month: "short",
         }),
         weekIndex: i,

@@ -5,6 +5,7 @@ import {
   generateMonthLabels,
   getColor,
   groupByWeeks,
+  parseLocalDate,
 } from "../util";
 
 export default function AchievementsHeatmap() {
@@ -80,7 +81,7 @@ export default function AchievementsHeatmap() {
                       {day.unlockDate
                         ? `${day.count} achievement${
                             day.count !== 1 ? "s" : ""
-                          } on ${new Date(day.unlockDate).toLocaleDateString()}`
+                          } on ${parseLocalDate(day.unlockDate).toLocaleDateString()}`
                         : "No data"}
                     </div>
                   </div>

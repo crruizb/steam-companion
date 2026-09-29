@@ -4,7 +4,6 @@ type SteamImageProps = {
   appId: number;
   alt?: string;
   className?: string;
-  placeholderSrc?: string;
 };
 
 const IMAGE_CANDIDATES = [
@@ -17,14 +16,22 @@ export function SteamImage({
   appId,
   alt = "Steam game image",
   className,
-  placeholderSrc = "/placeholder.png",
 }: SteamImageProps) {
   const [index, setIndex] = React.useState(0);
 
-  const src =
-    index < IMAGE_CANDIDATES.length
-      ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/${IMAGE_CANDIDATES[index]}`
-      : placeholderSrc;
+  if (index >= IMAGE_CANDIDATES.length) {
+    return (
+      <div
+        role="img"
+        aria-label={alt}
+        className={`${className ?? ""} flex items-center justify-center bg-linear-to-br from-gray-700 to-gray-900 p-4 text-center text-sm font-semibold text-gray-200`}
+      >
+        {alt}
+      </div>
+    );
+  }
+
+  const src = `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/${IMAGE_CANDIDATES[index]}`;
 
   const handleError = () => {
     setIndex((prev) => prev + 1);
