@@ -47,7 +47,7 @@ class UserServiceTest {
         val result = userService.saveUser(userDto)
 
         // Then
-        assertEquals(userDto.copy(id = 1, ownedGames = emptySet()), result)
+        assertEquals(userDto.copy(id = 1), result)
         verify { userRepository.save(userDto.toUser()) }
     }
 
@@ -121,8 +121,7 @@ class UserServiceTest {
             username = "testuser",
             displayName = "Test User",
             avatarUrl = "http://avatar.url",
-            profileUrl = "http://profile.url",
-            ownedGames = emptySet()
+            profileUrl = "http://profile.url"
         )
         val user = User(
             id = 1,
@@ -140,6 +139,25 @@ class UserServiceTest {
 
         // Then
         assertEquals(userDto, result)
+    }
+
+    @Test
+    fun `findBySteamId does not load the user's games`() {
+        // Given
+        // A strict mock throws on any call, so touching the (lazy) games collection fails the test
+        val user = User(
+            id = 1,
+            steamId = "123",
+            username = "testuser",
+            userGames = mockk()
+        )
+        every { userRepository.findBySteamId("123") } returns Optional.of(user)
+
+        // When
+        val result = userService.findBySteamId("123")
+
+        // Then
+        assertNull(result?.ownedGames)
     }
 }
 

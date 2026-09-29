@@ -21,7 +21,7 @@ open class UserService(
     open fun findBySteamIdWithGames(steamId: String): UserDto? {
         return userRepository.findBySteamIdWithGames(steamId)
             .getOrElse { return null }
-            .toDto()
+            .toDto(includeGames = true)
     }
 
     fun saveUser(user: UserDto): UserDto {

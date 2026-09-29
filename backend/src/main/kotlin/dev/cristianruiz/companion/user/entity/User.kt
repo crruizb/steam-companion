@@ -59,7 +59,7 @@ class User(
 
     override fun hashCode() = id.hashCode()
 
-    fun toDto(): UserDto {
+    fun toDto(includeGames: Boolean = false): UserDto {
         return UserDto(
             id = this.id,
             steamId = this.steamId,
@@ -67,7 +67,7 @@ class User(
             displayName = this.displayName ?: "",
             avatarUrl = this.avatarUrl ?: "",
             profileUrl = this.profileUrl ?: "",
-            ownedGames = this.userGames.map { it.toUserGamesDto() }.toSet()
+            ownedGames = if (includeGames) this.userGames.map { it.toUserGamesDto() }.toSet() else null
         )
     }
 
