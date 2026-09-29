@@ -1,4 +1,8 @@
 spring:
+  config:
+    # Local secrets (gitignored); see backend/application-local.yaml
+    # Checked from backend/ (gradlew bootRun) and from the repo root (IntelliJ's default working dir)
+    import: optional:file:./application-local.yaml,optional:file:./backend/application-local.yaml
   profiles:
     active: prod
   application:

@@ -10,7 +10,9 @@ export const importGamesFromSteam = async () => {
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to import games: ${response.status}`)
+        // The backend returns { message } for known failures, e.g. a private Steam profile
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message ?? "Could not import games. Please try again.")
     }
 }
 

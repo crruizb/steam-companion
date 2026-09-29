@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.view.RedirectView
 import java.net.URLEncoder.encode
+import java.nio.charset.StandardCharsets
 
 @RestController
 @RequestMapping("/api/auth")
@@ -58,21 +59,20 @@ class AuthController(
                 response.addCookie(accessCookie)
                 response.addCookie(refreshCookie)
 
-                val userJson = encode(
-                    "{\"steamId\":\"${user.steamId}\",\"username\":\"${user.username}\",\"displayName\":\"${user.displayName}\",\"avatarUrl\":\"${user.avatarUrl}\",\"profileUrl\":\"${user.profileUrl}\"}",
-                    "UTF-8"
-                )
-                val callbackUrl = "$frontendUrl/auth/callback?success=true&user=$userJson"
-                RedirectView(callbackUrl)
+                // The frontend loads the user from /api/user/me using the cookies set above
+                RedirectView("$frontendUrl/auth/callback?success=true")
             } else {
-                val errorUrl = "$frontendUrl/auth/callback?success=false&error=Authentication failed"
-                RedirectView(errorUrl)
+                RedirectView(authErrorUrl())
             }
         } catch (e: Exception) {
             log.error("Steam authentication error", e)
-            val errorUrl = "$frontendUrl/auth/callback?success=false&error=${e.message}"
-            RedirectView(errorUrl)
+            RedirectView(authErrorUrl())
         }
+    }
+
+    private fun authErrorUrl(): String {
+        val error = encode("Authentication failed. Please try again.", StandardCharsets.UTF_8)
+        return "$frontendUrl/auth/callback?success=false&error=$error"
     }
 
     @PostMapping("/refresh")

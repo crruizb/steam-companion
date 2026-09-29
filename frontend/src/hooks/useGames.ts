@@ -26,7 +26,7 @@ export function useImportGames() {
     },
     onError: (error) => {
       toast.dismiss();
-      toast.error("Could not import games. Please try again.");
+      toast.error(error.message);
       console.error(error);
     },
     onMutate: () => {

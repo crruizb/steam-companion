@@ -4,6 +4,7 @@ package dev.cristianruiz.companion.games
 import dev.cristianruiz.companion.achievements.AchievementsRepository
 import dev.cristianruiz.companion.achievements.entity.Achievements
 import dev.cristianruiz.companion.auth.AuthController
+import dev.cristianruiz.companion.exceptions.BadRequestException
 import dev.cristianruiz.companion.games.dto.UserGamesDto
 import dev.cristianruiz.companion.games.entity.UserGames
 import dev.cristianruiz.companion.games.entity.UserGamesId
@@ -30,7 +31,13 @@ class GamesService(
 
     fun importGames(user: User): String {
         val ownedGamesResponse = steamUserApiClient.getOwnedGames(user.steamId)
-        val ownedGames = ownedGamesResponse.response.games
+        val ownedGamesResult = ownedGamesResponse.response
+        if (ownedGamesResult.games == null && ownedGamesResult.gameCount == null) {
+            throw BadRequestException(
+                "Your Steam game details are private. Set 'Game details' to Public in your Steam privacy settings and try again."
+            )
+        }
+        val ownedGames = ownedGamesResult.games.orEmpty()
         val userGames = ownedGames.map { og ->
             UserGames(
                 id = UserGamesId(user.id, og.appId),

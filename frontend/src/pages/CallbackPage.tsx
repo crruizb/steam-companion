@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { authKeys } from "../hooks/useAuth.ts";
-import { storeUser } from "../services/authService.ts";
 
 function CallbackPage() {
   const navigate = useNavigate();
@@ -24,23 +23,9 @@ function CallbackPage() {
           throw new Error(errorMessage || "Authentication failed");
         }
 
-        // Get user data from URL parameters
-        const userParam = searchParams.get("user");
-        if (userParam) {
-          try {
-            const userData = JSON.parse(decodeURIComponent(userParam));
-            storeUser(userData);
-          } catch (parseError) {
-            console.error("Failed to parse user data:", parseError);
-            throw new Error("Invalid user data received");
-          }
-        } else {
-          throw new Error("No user data received");
-        }
-
         setStatus("success");
 
-        // Invalidate auth queries to trigger fresh fetch with new user data
+        // Auth cookies are set now, so refetch the user from /user/me
         queryClient.invalidateQueries({ queryKey: authKeys.all });
 
         // Redirect to home page after successful login

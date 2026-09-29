@@ -1,5 +1,6 @@
 package dev.cristianruiz.companion.games
 
+import dev.cristianruiz.companion.exceptions.BadRequestException
 import dev.cristianruiz.companion.games.entity.UserGames
 import dev.cristianruiz.companion.games.entity.UserGamesId
 import dev.cristianruiz.companion.steam.PlayerOwnedGame
@@ -14,6 +15,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 @ExtendWith(MockKExtension::class)
@@ -85,6 +87,47 @@ class GamesServiceTest {
 
         // Then
         verify { gamesRepository.saveAll(userGames) }
+    }
+
+    @Test
+    fun `should throw bad request when steam game details are private`() {
+        // Given
+        val user = User(
+            id = 1,
+            steamId = "123456789",
+            username = "testuser",
+            displayName = "Test User",
+            avatarUrl = "http://avatar.url",
+            profileUrl = "http://profile.url"
+        )
+        // Steam responds with {"response":{}} for private profiles
+        every { steamUserApiClient.getOwnedGames(user.steamId) } returns PlayerOwnedGamesResponse(PlayerOwnedGames())
+
+        // When / Then
+        assertFailsWith<BadRequestException> { gamesService.importGames(user) }
+        verify(exactly = 0) { gamesRepository.saveAll(any<List<UserGames>>()) }
+    }
+
+    @Test
+    fun `should import nothing when a public profile owns no games`() {
+        // Given
+        val user = User(
+            id = 1,
+            steamId = "123456789",
+            username = "testuser",
+            displayName = "Test User",
+            avatarUrl = "http://avatar.url",
+            profileUrl = "http://profile.url"
+        )
+        every { steamUserApiClient.getOwnedGames(user.steamId) } returns
+            PlayerOwnedGamesResponse(PlayerOwnedGames(gameCount = 0))
+        every { gamesRepository.saveAll(emptyList<UserGames>()) } returns emptyList()
+
+        // When
+        gamesService.importGames(user)
+
+        // Then
+        verify { gamesRepository.saveAll(emptyList<UserGames>()) }
     }
 
     @Test

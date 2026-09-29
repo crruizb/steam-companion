@@ -6,10 +6,11 @@ data class PlayerOwnedGamesResponse(
     val response: PlayerOwnedGames
 )
 
+// Steam returns an empty object ({"response":{}}) when the profile's game details are private
 data class PlayerOwnedGames(
-    val games: List<PlayerOwnedGame>,
+    val games: List<PlayerOwnedGame>? = null,
     @JsonProperty("game_count")
-    val gameCount: Int
+    val gameCount: Int? = null
 )
 
 data class PlayerOwnedGame(
