@@ -88,7 +88,7 @@ The pipeline runs on pushes to `main`, pull requests, and manual dispatch. It ha
 #### 2. Frontend Job
 
 - Installs dependencies with pnpm (`--frozen-lockfile`)
-- Runs `pnpm lint` and `pnpm build`
+- Runs `pnpm lint`, `pnpm test` (Vitest) and `pnpm build`
 
 #### 3. Deploy Job
 
@@ -119,6 +119,15 @@ cd backend
 
 # Run all tests
 ./gradlew test
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+
+# Run all tests (Vitest)
+pnpm test
 ```
 
 ## UI

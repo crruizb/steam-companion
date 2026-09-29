@@ -5,7 +5,7 @@ import {
   fetchRandomGame,
   importGamesFromSteam,
 } from "../services/gamesService.ts";
-import { isAuthError } from "../services/api.ts";
+import { ApiError, isAuthError } from "../services/api.ts";
 import toast from "react-hot-toast";
 
 export const gamesKeys = {
@@ -28,7 +28,12 @@ export function useImportGames() {
     },
     onError: (error) => {
       toast.dismiss();
-      toast.error(error.message);
+      // 400 carries the backend's reason, e.g. a private Steam profile
+      toast.error(
+        error instanceof ApiError && error.status === 400
+          ? error.message
+          : "Could not import games. Please try again."
+      );
       console.error(error);
     },
     onMutate: () => {
@@ -50,11 +55,17 @@ export function useUserGames() {
   });
 }
 
+// A mutation, not a query, although it's a GET: it should only run on click and every
+// click needs a fresh pick, so none of useQuery's automatic fetching or caching applies
 export function useRandomGame() {
   return useMutation({
     mutationFn: fetchRandomGame,
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(
+        error instanceof ApiError && error.status === 404
+          ? "Import your games first, then we can pick one for you."
+          : "Could not pick a random game. Please try again."
+      );
     },
   });
 }

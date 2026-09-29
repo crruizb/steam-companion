@@ -15,13 +15,6 @@ export interface Game {
   imgUrl: string | null;
 }
 
-export interface AuthResponse {
-  accessToken?: string;
-  refreshToken?: string;
-  user?: User;
-  error?: string;
-}
-
 export interface AchievementsPerDate {
   unlockDate: string;
   count: number;

@@ -12,36 +12,11 @@ export const initiateSteamLogin = (): void => {
 };
 
 /**
- * Check if user is authenticated by making a request to a protected endpoint
- */
-export const checkAuthenticationStatus = async (): Promise<boolean> => {
-  try {
-    const response = await fetch(`${config.API_BASE_URL}/user/me`, {
-      method: "GET",
-      credentials: "include", // Include cookies in the request
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    return response.ok;
-  } catch (error) {
-    console.error("Authentication check failed:", error);
-    return false;
-  }
-};
-
-/**
  * Fetch user data from the API
  */
 export const fetchUserData = async (): Promise<User> => {
   const response = await apiFetch("/user/me", { method: "GET" });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch user data: ${response.status}`);
-  }
-
-  const userData = await response.json();
-  return userData;
+  return response.json();
 };
 
 /**

@@ -4,7 +4,7 @@ import {
   achievementsFromUser,
   importAchievementsFromUser,
 } from "../services/achievementsService.ts";
-import { isAuthError } from "../services/api.ts";
+import { ApiError, isAuthError } from "../services/api.ts";
 import type { AchievementsHeatmap } from "../types/index.ts";
 
 export const achievementsKeys = {
@@ -29,7 +29,12 @@ export function useImportAchievements() {
     },
     onError: (error) => {
       toast.dismiss();
-      toast.error("Could not import achievements. Please try again.");
+      // 400 carries the backend's reason, e.g. no games imported yet
+      toast.error(
+        error instanceof ApiError && error.status === 400
+          ? error.message
+          : "Could not import achievements. Please try again."
+      );
       console.error(error);
     },
   });
