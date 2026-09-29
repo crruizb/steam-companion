@@ -1,4 +1,4 @@
-import type { AchievementsPerDate } from "./types";
+import type { AchievementsPerDate, Game } from "./types";
 
 export function getColor(count: number): string {
   // Brighter means more achievements (heat-* tokens in index.css)
@@ -154,4 +154,44 @@ export function longestStreak(days: AchievementsPerDate[]): number {
     longest = Math.max(longest, current);
   }
   return longest;
+}
+
+export type LibrarySort = "most-played" | "recent" | "name" | "shuffle";
+export type LibraryFilter = "all" | "played" | "never-played";
+
+// Lowercase and strip accents, so "pokemon" finds "Pokémon"
+const normalizeText = (text: string) =>
+  text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+const byName = (a: Game, b: Game) =>
+  a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
+
+const lastPlayedTime = (game: Game) => (game.lastPlayedAt ? Date.parse(game.lastPlayedAt) : 0);
+
+/**
+ * Searches, filters and sorts a library into a new array.
+ * "shuffle" keeps the order of the given games, so pass them already shuffled.
+ */
+export function filterAndSortGames(
+  games: readonly Game[],
+  { query, filter, sort }: { query: string; filter: LibraryFilter; sort: LibrarySort },
+): Game[] {
+  const search = normalizeText(query.trim());
+  const result = games.filter(
+    (game) =>
+      (filter === "all" || (filter === "played") === game.playTimeForeverMinutes > 0) &&
+      (search === "" || normalizeText(game.name).includes(search)),
+  );
+
+  switch (sort) {
+    case "most-played":
+      return result.sort((a, b) => b.playTimeForeverMinutes - a.playTimeForeverMinutes || byName(a, b));
+    case "recent":
+      // Never played (no date) goes last
+      return result.sort((a, b) => lastPlayedTime(b) - lastPlayedTime(a) || byName(a, b));
+    case "name":
+      return result.sort(byName);
+    case "shuffle":
+      return result;
+  }
 }

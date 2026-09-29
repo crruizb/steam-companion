@@ -44,7 +44,8 @@ class TestSteamUserApiClient: SteamUserApiClient {
                 appId = 570,
                 name = "Dota 2",
                 playtimeForever = 1200,
-                imgIconUrl = "iconurl1"
+                imgIconUrl = "iconurl1",
+                rtimeLastPlayed = 1700000000
             ),
             PlayerOwnedGame(
                 appId = 730,
@@ -164,6 +165,11 @@ class GamesControllerIntegrationTest {
                 }
             )
         }
+
+        // Last played is sent as an ISO-8601 string (the frontend parses it), null when never played
+        val lastPlayed = ownedGames.associate { it["appId"].asInt() to it["lastPlayedAt"] }
+        assertEquals("2023-11-14T22:13:20Z", lastPlayed[570]?.asText())
+        assertTrue(lastPlayed[730]?.isNull ?: false)
     }
 
     @Test

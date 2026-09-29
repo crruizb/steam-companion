@@ -13,6 +13,8 @@ export interface Game {
   playTimeForeverMinutes: number;
   name: string;
   imgUrl: string | null;
+  /** ISO-8601; null if never played or not re-imported since this field was added */
+  lastPlayedAt?: string | null;
 }
 
 export interface AchievementsPerDate {

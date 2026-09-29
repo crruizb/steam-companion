@@ -44,6 +44,7 @@ class GamesService(
                 name = og.name,
                 playTimeForeverMinutes = og.playtimeForever,
                 imgUrl = "https://media.steampowered.com/steamcommunity/public/images/apps/${og.appId}/${og.imgIconUrl}.jpg",
+                lastPlayedAt = og.rtimeLastPlayed.takeIf { it > 0 }?.let(Instant::ofEpochSecond),
                 user = user
             )
         }

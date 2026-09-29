@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { Game } from "./types";
 import {
+  filterAndSortGames,
   fillMissingDays,
   generateMonthLabels,
   getColor,
@@ -144,5 +146,54 @@ describe("longestStreak", () => {
 
   it("is 0 without activity", () => {
     expect(longestStreak(fillMissingDays([], 2025))).toBe(0);
+  });
+});
+
+describe("filterAndSortGames", () => {
+  const game = (name: string, minutes: number, lastPlayedAt: string | null = null): Game => ({
+    appId: name.length,
+    name,
+    playTimeForeverMinutes: minutes,
+    imgUrl: null,
+    lastPlayedAt,
+  });
+  const library = [
+    game("Portal 2", 840, "2025-03-01T10:00:00Z"),
+    game("Pokémon Legends", 0),
+    game("Hades", 4410, "2025-06-15T20:00:00Z"),
+    game("Half-Life 2", 1250, "2024-12-24T18:00:00Z"),
+    game("Portal", 300, "2025-03-01T10:00:00Z"),
+  ];
+  const names = (games: Game[]) => games.map((g) => g.name);
+  const run = (options: Partial<Parameters<typeof filterAndSortGames>[1]>) =>
+    names(filterAndSortGames(library, { query: "", filter: "all", sort: "shuffle", ...options }));
+
+  it("searches names ignoring case and accents", () => {
+    expect(run({ query: "  POKEMON " })).toEqual(["Pokémon Legends"]);
+    expect(run({ query: "portal" })).toEqual(["Portal 2", "Portal"]);
+  });
+
+  it("filters played and never played games", () => {
+    expect(run({ filter: "never-played" })).toEqual(["Pokémon Legends"]);
+    expect(run({ filter: "played" })).not.toContain("Pokémon Legends");
+  });
+
+  it("sorts by playtime, most first", () => {
+    expect(run({ sort: "most-played" })).toEqual(["Hades", "Half-Life 2", "Portal 2", "Portal", "Pokémon Legends"]);
+  });
+
+  it("sorts by last played, never played last and ties by name", () => {
+    expect(run({ sort: "recent" })).toEqual(["Hades", "Portal", "Portal 2", "Half-Life 2", "Pokémon Legends"]);
+  });
+
+  it("sorts by name with numbers in order", () => {
+    expect(run({ sort: "name" })).toEqual(["Hades", "Half-Life 2", "Pokémon Legends", "Portal", "Portal 2"]);
+  });
+
+  it("keeps the given order for shuffle and never changes the input", () => {
+    const before = names(library);
+    expect(run({ sort: "shuffle" })).toEqual(before);
+    run({ sort: "name" });
+    expect(names(library)).toEqual(before);
   });
 });

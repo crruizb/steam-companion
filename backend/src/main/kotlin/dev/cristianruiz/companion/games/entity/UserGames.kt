@@ -39,6 +39,9 @@ data class UserGames(
     @Column(name = "img_url")
     var imgUrl: String?,
 
+    @Column(name = "last_played_at")
+    var lastPlayedAt: Instant? = null,
+
     @CreatedDate
     @Column(name = "created_at")
     var createdAt: Instant? = null,
@@ -52,7 +55,8 @@ data class UserGames(
             appId = this.id.appId,
             playTimeForeverMinutes = this.playTimeForeverMinutes,
             name = this.name,
-            imgUrl = this.imgUrl
+            imgUrl = this.imgUrl,
+            lastPlayedAt = this.lastPlayedAt
         )
     }
 }

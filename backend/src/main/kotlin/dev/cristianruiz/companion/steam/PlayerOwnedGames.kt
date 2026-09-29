@@ -22,4 +22,7 @@ data class PlayerOwnedGame(
     val playtimeForever: Int,
     @JsonProperty("img_icon_url")
     val imgIconUrl: String,
+    // Unix seconds; 0 when the game was never played
+    @JsonProperty("rtime_last_played")
+    val rtimeLastPlayed: Long = 0,
 )

@@ -15,6 +15,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
+import java.time.Instant
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -52,7 +53,8 @@ class GamesServiceTest {
                     appId = 570,
                     name = "Dota 2",
                     playtimeForever = 1500,
-                    imgIconUrl = "icon1"
+                    imgIconUrl = "icon1",
+                    rtimeLastPlayed = 1700000000
                 ),
                 PlayerOwnedGame(
                     appId = 730,
@@ -71,8 +73,10 @@ class GamesServiceTest {
                 name = "Dota 2",
                 playTimeForeverMinutes = 1500,
                 imgUrl = "https://media.steampowered.com/steamcommunity/public/images/apps/570/icon1.jpg",
+                lastPlayedAt = Instant.ofEpochSecond(1700000000),
                 user = user
             ),
+            // Never played (Steam sends 0): no last played date
             UserGames(
                 id = UserGamesId(user.id, 730),
                 name = "Counter-Strike: Global Offensive",
@@ -191,4 +195,4 @@ class GamesServiceTest {
         verify { gamesRepository.findByUserId(user.id) }
     }
 
-}
+}
