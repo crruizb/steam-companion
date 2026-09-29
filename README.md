@@ -94,7 +94,8 @@ The pipeline runs on pushes to `main`, pull requests, and manual dispatch. It ha
 
 - Runs only on `main` (never for pull requests), after the backend job succeeds
 - Downloads the JAR artifact and builds a Docker image
-- Pushes it to DockerHub with three tags: the build date (`YYYYMMDDHHMMSS`, used as the version), the short commit SHA, and `latest`
+- Pushes it to DockerHub with two tags: `<build date>-<short commit SHA>` (e.g. `20260929153012-a1b2c3d`) and `latest`. The date prefix lets Flux pick the newest image; the SHA shows which code it contains
+- The image runs as a non-root user on a JRE base image. The heap is 50% of the container's memory limit (the rest covers the JVM's non-heap memory); override it with the `JAVA_TOOL_OPTIONS` environment variable
 
 ### Required GitHub Secrets
 
