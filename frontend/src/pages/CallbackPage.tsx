@@ -48,11 +48,11 @@ function CallbackPage() {
   }, [searchParams, navigate, queryClient]);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow p-8 max-w-md w-full mx-4">
+    <div className="min-h-screen bg-page flex items-center justify-center">
+      <div className="bg-card border border-line/60 rounded-2xl p-8 max-w-md w-full mx-4">
         {status === "success" && (
           <div className="text-center">
-            <div className="text-green-500 mb-4">
+            <div className="text-green-400 mb-4">
               <svg
                 className="w-12 h-12 mx-auto"
                 fill="none"
@@ -67,16 +67,16 @@ function CallbackPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xl font-bold text-heading mb-2">
               Login Successful!
             </h2>
-            <p className="text-gray-600">Redirecting you to the dashboard...</p>
+            <p className="text-muted">Redirecting you to the dashboard...</p>
           </div>
         )}
 
         {status === "error" && (
           <div className="text-center">
-            <div className="text-red-500 mb-4">
+            <div className="text-red-400 mb-4">
               <svg
                 className="w-12 h-12 mx-auto"
                 fill="none"
@@ -91,11 +91,11 @@ function CallbackPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xl font-bold text-heading mb-2">
               Authentication Failed
             </h2>
-            <p className="text-red-600 mb-4">{error}</p>
-            <p className="text-gray-600">
+            <p className="text-red-400 mb-4">{error}</p>
+            <p className="text-muted">
               Redirecting you back to the home page...
             </p>
           </div>

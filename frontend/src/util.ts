@@ -1,11 +1,12 @@
 import type { AchievementsPerDate } from "./types";
 
 export function getColor(count: number): string {
-  if (count === 0) return "bg-neutral-200";
-  if (count < 2) return "bg-green-200";
-  if (count < 4) return "bg-green-300";
-  if (count < 6) return "bg-green-500";
-  return "bg-green-700";
+  // Brighter means more achievements (heat-* tokens in index.css)
+  if (count === 0) return "bg-heat-0";
+  if (count < 2) return "bg-heat-1";
+  if (count < 4) return "bg-heat-2";
+  if (count < 6) return "bg-heat-3";
+  return "bg-heat-4";
 }
 
 export function parseLocalDate(isoDate: string): Date {
@@ -122,4 +123,35 @@ export function generateMonthLabels(
   });
 
   return labels;
+}
+
+export function formatPlayTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  if (hours === 0) return `${mins}m`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}m`;
+}
+
+const compactFormat = new Intl.NumberFormat("en", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+const fullFormat = new Intl.NumberFormat("en");
+
+/** 1,284 up to 9,999, then compact: 12.9K, 4.2M. */
+export function formatNumber(value: number): string {
+  return value < 10_000 ? fullFormat.format(value) : compactFormat.format(value);
+}
+
+/** Longest run of consecutive days with at least one achievement. Expects every day present (see fillMissingDays). */
+export function longestStreak(days: AchievementsPerDate[]): number {
+  let longest = 0;
+  let current = 0;
+  for (const day of days) {
+    current = day.count > 0 ? current + 1 : 0;
+    longest = Math.max(longest, current);
+  }
+  return longest;
 }

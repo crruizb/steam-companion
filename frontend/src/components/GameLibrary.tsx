@@ -1,57 +1,70 @@
 import { useMemo } from "react";
-import { useUserGames } from "../hooks/useGames";
-import { shuffle } from "../util";
+import { Clock, Download, Gamepad2 } from "lucide-react";
+import { useImportGames, useUserGames } from "../hooks/useGames";
+import { formatPlayTime, shuffle } from "../util";
 import { SteamImage } from "./SteamImage";
+import { primaryButton } from "./buttonStyles";
 
-const formatPlayTime = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-
-  if (hours === 0) return `${mins}m`;
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h ${mins}m`;
-};
-
-export default function GameLibrary() {
-  const { data: user } = useUserGames();
-  const games = useMemo(() => shuffle(user?.ownedGames ?? []), [user?.ownedGames]);
-
-  const handleSteamGameClick = (appId: number) => {
-    window.open(`https://store.steampowered.com/app/${appId}`, "_blank");
-  };
+function EmptyLibrary() {
+  const { mutate: importGames, isPending } = useImportGames();
 
   return (
-    <div className="mt-10">
-      <h1 className="text-2xl mb-2">Your game library</h1>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-6">
-        {games.map(
-          (game) =>
-            game.imgUrl && (
-              <div
-                key={game.appId}
-                className="group relative bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer"
-                onClick={() => handleSteamGameClick(game.appId)}
-              >
-                <div className="aspect-3/4 relative">
-                  <SteamImage
-                    appId={game.appId}
-                    alt={game.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <h3 className="text-white text-sm font-semibold line-clamp-2">
-                    {game.name}
-                  </h3>
-                  <h4 className="text-white text-xs">
-                    {formatPlayTime(game.playTimeForeverMinutes)} played
-                  </h4>
-                </div>
-              </div>
-            )
-        )}
+    <div className="flex flex-col items-center rounded-2xl border border-dashed border-line py-12 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/15 text-accent">
+        <Gamepad2 className="h-6 w-6" />
       </div>
+      <p className="mt-4 font-semibold text-heading">No games imported yet</p>
+      <p className="mt-1 text-sm text-muted">Import your Steam library to see it here.</p>
+      <button type="button" className={`${primaryButton} mt-5`} onClick={() => importGames()} disabled={isPending}>
+        <Download className="h-4 w-4" />
+        Import games
+      </button>
     </div>
+  );
+}
+
+export default function GameLibrary() {
+  const { data: user, isLoading } = useUserGames();
+  // Shuffle a copy once per fetched library, so re-renders keep the same order
+  const games = useMemo(() => shuffle(user?.ownedGames ?? []), [user?.ownedGames]);
+
+  return (
+    <section>
+      <div className="mb-4 flex items-baseline justify-between">
+        <h2 className="text-xl font-semibold text-heading">Your library</h2>
+        {games.length > 0 && <span className="text-sm text-muted">{games.length} games</span>}
+      </div>
+
+      {!isLoading && games.length === 0 ? (
+        <EmptyLibrary />
+      ) : (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {games.map((game) => (
+            <a
+              key={game.appId}
+              href={`https://store.steampowered.com/app/${game.appId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <div className="aspect-3/4 overflow-hidden rounded-xl border border-line/60 bg-card shadow-md shadow-black/10 transition duration-200 group-hover:-translate-y-1 group-hover:border-accent/70 group-hover:shadow-xl">
+                <SteamImage
+                  appId={game.appId}
+                  alt={game.name}
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                />
+              </div>
+              <p className="mt-2 line-clamp-1 text-sm font-medium text-heading" title={game.name}>
+                {game.name}
+              </p>
+              <p className="flex items-center gap-1 text-xs text-muted">
+                <Clock className="h-3 w-3" />
+                {game.playTimeForeverMinutes > 0 ? formatPlayTime(game.playTimeForeverMinutes) : "Never played"}
+              </p>
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

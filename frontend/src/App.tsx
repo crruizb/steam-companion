@@ -26,7 +26,10 @@ function App() {
             fontSize: "16px",
             maxWidth: "500px",
             padding: "16px 24px",
-            color: "var(--color-grey-700)",
+            // Theme tokens from index.css
+            color: "var(--fg)",
+            background: "var(--card)",
+            border: "1px solid var(--line)",
           },
         }}
       />

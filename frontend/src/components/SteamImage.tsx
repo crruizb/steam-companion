@@ -24,7 +24,7 @@ export function SteamImage({
       <div
         role="img"
         aria-label={alt}
-        className={`${className ?? ""} flex items-center justify-center bg-linear-to-br from-gray-700 to-gray-900 p-4 text-center text-sm font-semibold text-gray-200`}
+        className={`${className ?? ""} flex items-center justify-center bg-linear-to-br from-line to-card p-4 text-center text-sm font-semibold text-fg`}
       >
         {alt}
       </div>

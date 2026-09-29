@@ -3,7 +3,10 @@ import {
   fillMissingDays,
   generateMonthLabels,
   getColor,
+  formatNumber,
+  formatPlayTime,
   groupByWeeks,
+  longestStreak,
   parseLocalDate,
   shuffle,
 } from "./util";
@@ -90,13 +93,13 @@ describe("generateMonthLabels", () => {
 });
 
 describe("getColor", () => {
-  it("gets darker as the count grows", () => {
+  it("gets brighter as the count grows", () => {
     expect([0, 1, 3, 5, 6].map(getColor)).toEqual([
-      "bg-neutral-200",
-      "bg-green-200",
-      "bg-green-300",
-      "bg-green-500",
-      "bg-green-700",
+      "bg-heat-0",
+      "bg-heat-1",
+      "bg-heat-2",
+      "bg-heat-3",
+      "bg-heat-4",
     ]);
   });
 });
@@ -109,5 +112,37 @@ describe("shuffle", () => {
     expect(input).toEqual([1, 2, 3, 4, 5]);
     expect(result).not.toBe(input);
     expect([...result].sort()).toEqual(input);
+  });
+});
+
+describe("formatPlayTime", () => {
+  it("shows hours and minutes, dropping zero parts", () => {
+    expect([0, 45, 60, 135].map(formatPlayTime)).toEqual(["0m", "45m", "1h", "2h 15m"]);
+  });
+});
+
+describe("formatNumber", () => {
+  it("groups small numbers and compacts large ones", () => {
+    expect([7, 1284, 9999, 12_900, 4_200_000].map(formatNumber)).toEqual([
+      "7",
+      "1,284",
+      "9,999",
+      "12.9K",
+      "4.2M",
+    ]);
+  });
+});
+
+describe("longestStreak", () => {
+  it("counts the longest run of consecutive active days", () => {
+    const days = [1, 2, 0, 1, 1, 1, 0, 3].map((count, i) => ({
+      unlockDate: `2025-01-0${i + 1}`,
+      count,
+    }));
+    expect(longestStreak(days)).toBe(3);
+  });
+
+  it("is 0 without activity", () => {
+    expect(longestStreak(fillMissingDays([], 2025))).toBe(0);
   });
 });

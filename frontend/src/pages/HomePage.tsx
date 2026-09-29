@@ -1,12 +1,12 @@
 import { useUser } from "../hooks/useAuth.ts";
 import Header from "../components/Header.tsx";
 import Loading from "../components/Loading.tsx";
-import ProfileCard from "../components/ProfileCard.tsx";
-import GameStatistics from "../components/GameStatistics.tsx";
-import QuickActions from "../components/QuickActions.tsx";
 import Login from "../components/Login.tsx";
-import GameLibrary from "../components/GameLibrary.tsx";
+import ProfileHero from "../components/ProfileHero.tsx";
+import StatsOverview from "../components/StatsOverview.tsx";
 import AchievementsHeatmap from "../components/AchievementsHeatmap.tsx";
+import GameLibrary from "../components/GameLibrary.tsx";
+import { primaryButton } from "../components/buttonStyles.ts";
 
 function HomePage() {
   const { data: user, isLoading, error } = useUser();
@@ -18,50 +18,32 @@ function HomePage() {
 
   if (error && !user) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="bg-white rounded-lg shadow p-6 max-w-md">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
-              Connection Error
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Unable to load user data. Please check your connection and try
-              again.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-            >
-              Retry
-            </button>
-          </div>
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="max-w-md rounded-2xl border border-line/60 bg-card p-6 text-center">
+          <h2 className="mb-2 text-lg font-semibold text-heading">Connection error</h2>
+          <p className="mb-4 text-muted">
+            Unable to load user data. Please check your connection and try again.
+          </p>
+          <button type="button" onClick={() => window.location.reload()} className={primaryButton}>
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       <Header />
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         {user ? (
-          <div>
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Welcome back, {user.displayName || user.username}!
-              </h2>
-              <p className="text-lg text-gray-600">
-                Here's your Steam companion dashboard
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <ProfileCard user={user} />
-              <GameStatistics />
-              <QuickActions />
-            </div>
+          <div className="space-y-6">
+            <ProfileHero user={user} />
+            <StatsOverview />
             <AchievementsHeatmap />
-            <GameLibrary />
+            <div className="pt-4">
+              <GameLibrary />
+            </div>
           </div>
         ) : (
           <Login />
