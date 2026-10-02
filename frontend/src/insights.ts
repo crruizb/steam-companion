@@ -1,4 +1,5 @@
-import type { Game } from "./types";
+import type { AchievementsPerDate, Game } from "./types";
+import { fillMissingDays, longestStreak, parseLocalDate } from "./util";
 
 export type PlaytimeBucket = { label: string; count: number };
 
@@ -102,5 +103,39 @@ export function achievementProgress(games: readonly Game[], closestLimit = 6): A
       started.length === 0 ? null : started.reduce((total, g) => total + completion(g), 0) / started.length,
     perfect,
     closest,
+  };
+}
+
+export type YearSummary = {
+  total: number;
+  activeDays: number;
+  longestStreak: number;
+  /** The day with the most unlocks (the earliest on a tie); null without any */
+  bestDay: AchievementsPerDate | null;
+  /** Unlocks per month, January first */
+  months: number[];
+  /** Month index (0 = January) with the most unlocks; null without any */
+  busiestMonth: number | null;
+};
+
+/** Day-based numbers for a year in review, from the heatmap's days of that year. */
+export function yearSummary(days: readonly AchievementsPerDate[], year: number): YearSummary {
+  const allDays = fillMissingDays([...days], year);
+  const months = Array<number>(12).fill(0);
+  let bestDay: AchievementsPerDate | null = null;
+  for (const day of allDays) {
+    months[parseLocalDate(day.unlockDate).getMonth()] += day.count;
+    if (day.count > 0 && (!bestDay || day.count > bestDay.count)) bestDay = day;
+  }
+  const total = months.reduce((sum, count) => sum + count, 0);
+  const most = Math.max(...months);
+
+  return {
+    total,
+    activeDays: allDays.filter((d) => d.count > 0).length,
+    longestStreak: longestStreak(allDays),
+    bestDay,
+    months,
+    busiestMonth: total === 0 ? null : months.indexOf(most),
   };
 }

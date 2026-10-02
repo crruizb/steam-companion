@@ -79,13 +79,17 @@ class AchievementsControllerIntegrationTest {
         token = jwtService.generateAccessToken(user.toDto())
 
         gamesRepository.saveAll(listOf(
-            UserGames(id = UserGamesId(user.id, 570), user = user, name = "Dota 2", playTimeForeverMinutes = 10, imgUrl = null),
+            // Perfect: both of its achievements are unlocked
+            UserGames(
+                id = UserGamesId(user.id, 570), user = user, name = "Dota 2", playTimeForeverMinutes = 10, imgUrl = null,
+                achievementsTotal = 2, achievementsUnlocked = 2
+            ),
             UserGames(id = UserGamesId(user.id, 730), user = user, name = "CS2", playTimeForeverMinutes = 10, imgUrl = null)
         ))
         achievementsRepository.saveAll(listOf(
             Achievements(userId = user.id, appId = 570, name = "COMMON", achieved = true, unlockTime = unlockTime),
             Achievements(userId = user.id, appId = 570, name = "RARE", achieved = true, unlockTime = unlockTime),
-            Achievements(userId = user.id, appId = 730, name = "RAREST", achieved = true, unlockTime = unlockTime)
+            Achievements(userId = user.id, appId = 730, name = "RAREST", achieved = true, unlockTime = unlockTime.minusYears(1))
         ))
         gameAchievementsRepository.saveAll(listOf(
             gameAchievement(570, "COMMON", 75.0),
@@ -124,6 +128,28 @@ class AchievementsControllerIntegrationTest {
         assertEquals(listOf("RAREST", "RARE", "COMMON"), json.map { it["displayName"].asText().removePrefix("Name of ") })
         assertEquals("CS2", json[0]["gameName"].asText())
         assertEquals(0.4, json[0]["globalPercent"].asDouble())
+    }
+
+    @Test
+    fun `should review only the given year`() {
+        val json = getJson("/api/achievements/review/2024")
+
+        assertEquals(2024, json["year"].asInt())
+        // CS2's only unlock was in 2023
+        assertEquals(listOf("Dota 2"), json["topGames"].map { it["name"].asText() })
+        assertEquals(2, json["topGames"][0]["achievements"].asInt())
+        assertEquals(listOf("Name of RARE", "Name of COMMON"), json["rarest"].map { it["displayName"].asText() })
+        assertEquals(listOf("Dota 2"), json["perfected"].map { it["name"].asText() })
+        assertEquals(2, json["perfected"][0]["achievementsTotal"].asInt())
+    }
+
+    @Test
+    fun `should return an empty review for a year without unlocks`() {
+        val json = getJson("/api/achievements/review/2020")
+
+        assertEquals(0, json["topGames"].size())
+        assertEquals(0, json["rarest"].size())
+        assertEquals(0, json["perfected"].size())
     }
 
     private fun getJson(path: String) = jacksonObjectMapper().readTree(

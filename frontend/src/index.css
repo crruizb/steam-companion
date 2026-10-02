@@ -27,6 +27,11 @@
   --heat-2: #2a6f9e;
   --heat-3: #4a9ad0;
   --heat-4: #66c0f4;
+
+  /* Two-series charts (you vs a friend). Validated as a pair against --card for
+     lightness, chroma and colorblind separation; "you" is a step deeper than the accent to fit the band */
+  --series-you: #4a9ad0;
+  --series-friend: #d95926;
 }
 
 :root[data-theme="light"] {
@@ -52,6 +57,9 @@
   --heat-2: #74b3e3;
   --heat-3: #3689d1;
   --heat-4: #1560ad;
+
+  --series-you: #1769c2;
+  --series-friend: #eb6834;
 }
 
 @theme inline {
@@ -74,6 +82,9 @@
   --color-heat-2: var(--heat-2);
   --color-heat-3: var(--heat-3);
   --color-heat-4: var(--heat-4);
+
+  --color-series-you: var(--series-you);
+  --color-series-friend: var(--series-friend);
 }
 
 @layer base {

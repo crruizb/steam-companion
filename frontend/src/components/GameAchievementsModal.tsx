@@ -52,7 +52,7 @@ export default function GameAchievementsModal({
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
   return (
-    <Modal isOpen={game !== null} onClose={onClose} title={game?.name} wide>
+    <Modal isOpen={game !== null} onClose={onClose} title={game?.name} size="lg">
       {isLoading ? (
         <div className="flex justify-center py-10">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />

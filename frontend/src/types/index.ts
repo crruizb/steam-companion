@@ -67,3 +67,68 @@ export interface RareAchievement {
   globalPercent: number;
   unlockTime: string | null;
 }
+
+export interface YearGame {
+  appId: number;
+  name: string;
+  achievements: number;
+}
+
+export interface PerfectedGame {
+  appId: number;
+  name: string;
+  achievementsTotal: number;
+  completedAt: string;
+}
+
+/** Per-game highlights of a year; day-by-day numbers come from the heatmap */
+export interface YearReview {
+  year: number;
+  topGames: YearGame[];
+  rarest: RareAchievement[];
+  perfected: PerfectedGame[];
+}
+
+export interface Friend {
+  steamId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  profileUrl: string | null;
+  /** Null for friendships older than Steam started recording it */
+  friendSince: string | null;
+}
+
+export interface SharedGame {
+  appId: number;
+  name: string;
+  myMinutes: number;
+  friendMinutes: number;
+}
+
+export interface LibraryComparison {
+  friendSteamId: string;
+  /** False when the friend's game details are private; the lists are empty then */
+  friendLibraryPublic: boolean;
+  myGameCount: number;
+  friendGameCount: number;
+  sharedGames: SharedGame[];
+  /** The friend's most played games you don't own */
+  friendOnlyTopGames: { appId: number; name: string; friendMinutes: number }[];
+}
+
+export interface AchievementComparisonRow {
+  apiName: string;
+  displayName: string;
+  description: string | null;
+  iconUrl: string | null;
+  globalPercent: number | null;
+  myUnlockTime: string | null;
+  friendUnlockTime: string | null;
+}
+
+export interface AchievementComparison {
+  appId: number;
+  /** False when the friend's achievements for the game are private */
+  friendAchievementsPublic: boolean;
+  achievements: AchievementComparisonRow[];
+}

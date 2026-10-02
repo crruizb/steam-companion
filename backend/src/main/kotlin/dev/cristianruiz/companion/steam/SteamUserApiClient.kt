@@ -12,6 +12,7 @@ interface SteamUserApiClient {
     fun getPlayerAchievements(steamId: String, appId: Int): PlayerAchievementsResponse?
     fun getGameSchema(appId: Int): GameSchemaResponse?
     fun getGlobalAchievementPercentages(appId: Int): GlobalAchievementPercentagesResponse?
+    fun getFriendList(steamId: String): FriendListResponse?
 }
 
 @Service
@@ -52,6 +53,11 @@ class HttpSteamUserApiClient(
     override fun getGlobalAchievementPercentages(appId: Int): GlobalAchievementPercentagesResponse? {
         val url = "$steamApiUrl/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=$appId"
         return restTemplate.getForObject(url, GlobalAchievementPercentagesResponse::class.java)
+    }
+
+    override fun getFriendList(steamId: String): FriendListResponse? {
+        val url = "$steamApiUrl/ISteamUser/GetFriendList/v0001/?key=$apiKey&steamid=$steamId&relationship=friend"
+        return restTemplate.getForObject(url, FriendListResponse::class.java)
     }
 
 }

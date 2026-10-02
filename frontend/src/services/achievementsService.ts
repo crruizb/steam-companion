@@ -3,6 +3,7 @@ import type {
   AchievementsImportStatus,
   GameAchievements,
   RareAchievement,
+  YearReview,
 } from "../types";
 import { apiFetch } from "./api";
 
@@ -23,6 +24,11 @@ export const gameAchievements = async (appId: number): Promise<GameAchievements>
 
 export const rarestAchievements = async (): Promise<RareAchievement[]> => {
   const response = await apiFetch("/achievements/rarest", { method: "GET" });
+  return response.json();
+};
+
+export const yearReview = async (year: number): Promise<YearReview> => {
+  const response = await apiFetch(`/achievements/review/${year}`, { method: "GET" });
   return response.json();
 };
 

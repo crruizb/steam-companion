@@ -6,6 +6,7 @@ import dev.cristianruiz.companion.achievements.dto.AchievementsPerDate
 import dev.cristianruiz.companion.achievements.dto.GameAchievementDto
 import dev.cristianruiz.companion.achievements.dto.GameAchievementsDto
 import dev.cristianruiz.companion.achievements.dto.RareAchievementDto
+import dev.cristianruiz.companion.achievements.dto.YearReviewDto
 import dev.cristianruiz.companion.achievements.dto.ImportState
 import dev.cristianruiz.companion.achievements.entity.Achievements
 import dev.cristianruiz.companion.exceptions.BadRequestException
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.milliseconds
@@ -165,6 +167,17 @@ class AchievementsService(
 
     fun rarestAchievements(user: User, limit: Int = 5): List<RareAchievementDto> =
         gameAchievementsRepository.findRarestUnlocked(user.id, PageRequest.of(0, limit))
+
+    fun yearReview(user: User, year: Int): YearReviewDto {
+        val from = OffsetDateTime.of(year, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
+        val to = from.plusYears(1)
+        return YearReviewDto(
+            year = year,
+            topGames = gameAchievementsRepository.findTopGamesBetween(user.id, from, to, PageRequest.of(0, 5)),
+            rarest = gameAchievementsRepository.findRarestUnlockedBetween(user.id, from, to, PageRequest.of(0, 3)),
+            perfected = gameAchievementsRepository.findPerfectedBetween(user.id, from, to)
+        )
+    }
 
     fun achievementsHeatmap(user: User): AchievementsHeatmap {
         val achievementsPerDate = achievementsRepository

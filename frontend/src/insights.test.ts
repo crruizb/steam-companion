@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Game } from "./types";
-import { achievementProgress, formatRarity, playtimeInsights } from "./insights";
+import { achievementProgress, formatRarity, playtimeInsights, yearSummary } from "./insights";
 
 const game = (name: string, playTimeForeverMinutes: number, achievements?: [number, number]): Game => ({
   appId: name.length,
@@ -99,5 +99,35 @@ describe("formatRarity", () => {
     expect(formatRarity(3.25)).toBe("3.3%");
     expect(formatRarity(57.4)).toBe("57%");
     expect(formatRarity(100)).toBe("100%");
+  });
+});
+
+describe("yearSummary", () => {
+  it("summarizes a year's unlocks by day and month", () => {
+    const summary = yearSummary(
+      [
+        { unlockDate: "2025-01-31", count: 2 },
+        { unlockDate: "2025-02-01", count: 5 },
+        { unlockDate: "2025-02-02", count: 1 },
+        { unlockDate: "2025-12-31", count: 5 },
+      ],
+      2025,
+    );
+
+    expect(summary.total).toBe(13);
+    expect(summary.activeDays).toBe(4);
+    expect(summary.longestStreak).toBe(3);
+    // A tie keeps the earlier day
+    expect(summary.bestDay).toEqual({ unlockDate: "2025-02-01", count: 5 });
+    expect(summary.months).toEqual([2, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5]);
+    expect(summary.busiestMonth).toBe(1);
+  });
+
+  it("handles a year without unlocks", () => {
+    const summary = yearSummary([], 2025);
+
+    expect(summary.total).toBe(0);
+    expect(summary.bestDay).toBeNull();
+    expect(summary.busiestMonth).toBeNull();
   });
 });

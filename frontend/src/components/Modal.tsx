@@ -9,8 +9,8 @@ type ModalProps = {
   children: ReactNode;
   /** Footer buttons. Defaults to a single Close button. */
   footer?: ReactNode;
-  /** Wider dialog, for lists */
-  wide?: boolean;
+  /** Dialog width: md for short content, lg for lists, xl for comparisons and previews */
+  size?: "md" | "lg" | "xl";
 };
 
 export default function Modal({
@@ -19,7 +19,7 @@ export default function Modal({
   title,
   children,
   footer,
-  wide = false,
+  size = "md",
 }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -45,7 +45,7 @@ export default function Modal({
         aria-modal="true"
         aria-label={title}
         className={`relative z-10 flex max-h-[90vh] w-full flex-col rounded-2xl border border-line/60 bg-card p-6 shadow-2xl shadow-black/40 ${
-          wide ? "max-w-xl" : "max-w-md"
+          { md: "max-w-md", lg: "max-w-xl", xl: "max-w-3xl" }[size]
         }`}
       >
         <div className="mb-4 flex items-start justify-between gap-4">

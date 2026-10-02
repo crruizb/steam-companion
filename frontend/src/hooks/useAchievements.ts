@@ -6,6 +6,7 @@ import {
   gameAchievements,
   importAchievementsFromUser,
   rarestAchievements,
+  yearReview,
 } from "../services/achievementsService.ts";
 import { ApiError, isAuthError } from "../services/api.ts";
 import type {
@@ -13,6 +14,7 @@ import type {
   AchievementsImportStatus,
   GameAchievements,
   RareAchievement,
+  YearReview,
 } from "../types/index.ts";
 import { gamesKeys } from "./useGames.ts";
 
@@ -24,6 +26,8 @@ export const achievementsKeys = {
   games: () => [...achievementsKeys.all, "games"] as const,
   game: (appId: number) => [...achievementsKeys.games(), appId] as const,
   rarest: () => [...achievementsKeys.all, "rarest"] as const,
+  reviews: () => [...achievementsKeys.all, "review"] as const,
+  review: (year: number) => [...achievementsKeys.reviews(), year] as const,
 };
 
 // One id for every import toast, so the progress toast is replaced by the result
@@ -50,6 +54,7 @@ export function useAchievementsImportStatus() {
         queryClient.invalidateQueries({ queryKey: achievementsKeys.user() });
         queryClient.invalidateQueries({ queryKey: achievementsKeys.games() });
         queryClient.invalidateQueries({ queryKey: achievementsKeys.rarest() });
+        queryClient.invalidateQueries({ queryKey: achievementsKeys.reviews() });
         // Per-game achievement progress comes with the games
         queryClient.invalidateQueries({ queryKey: gamesKeys.user() });
       }
@@ -127,6 +132,17 @@ export function useRarestAchievements() {
   return useQuery({
     queryKey: achievementsKeys.rarest(),
     queryFn: (): Promise<RareAchievement[]> => rarestAchievements(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: (failureCount, error) => !isAuthError(error) && failureCount < 2,
+  });
+}
+
+/** Per-game highlights of a year. Pass null to skip fetching. */
+export function useYearReview(year: number | null) {
+  return useQuery({
+    queryKey: achievementsKeys.review(year ?? 0),
+    queryFn: (): Promise<YearReview> => yearReview(year!),
+    enabled: year !== null,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: (failureCount, error) => !isAuthError(error) && failureCount < 2,
   });

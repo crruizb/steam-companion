@@ -72,6 +72,8 @@ class TestSteamUserApiClient: SteamUserApiClient {
     override fun getGameSchema(appId: Int) = throw NotImplementedError()
 
     override fun getGlobalAchievementPercentages(appId: Int) = throw NotImplementedError()
+
+    override fun getFriendList(steamId: String) = throw NotImplementedError()
 }
 
 @SpringBootTest

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Flame, Trophy } from "lucide-react";
+import { Flame, Sparkles, Trophy } from "lucide-react";
 import { useAchievements } from "../hooks/useAchievements";
 import {
   fillMissingDays,
@@ -9,8 +9,9 @@ import {
   longestStreak,
   parseLocalDate,
 } from "../util";
-import { primaryButton } from "./buttonStyles";
+import { primaryButton, secondaryButton } from "./buttonStyles";
 import ImportAchievementsButton from "./ImportAchievementsButton";
+import YearInReviewModal from "./YearInReviewModal";
 
 const WEEKDAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""]; // Rows start on Sunday
 
@@ -35,6 +36,7 @@ export default function AchievementsHeatmap() {
   const { data: achievementsHeatmap, isLoading } = useAchievements();
   const years = Object.keys(achievementsHeatmap?.achievementsPerDate || {});
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Default to the most recent year with data
@@ -71,18 +73,24 @@ export default function AchievementsHeatmap() {
             {total} achievement{total !== 1 ? "s" : ""} unlocked in {activeYear}
           </p>
         </div>
-        <select
-          value={activeYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          aria-label="Year"
-          className="rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          {years.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <button type="button" className={`${secondaryButton} py-1.5`} onClick={() => setReviewOpen(true)}>
+            <Sparkles className="h-4 w-4" />
+            Year in review
+          </button>
+          <select
+            value={activeYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            aria-label="Year"
+            className="rounded-lg border border-line bg-card px-3 py-1.5 text-sm text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            {years.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Cells grow with the card; below min-w it scrolls sideways. Top padding leaves room for the first row's tooltips */}
@@ -159,6 +167,10 @@ export default function AchievementsHeatmap() {
           More
         </div>
       </div>
+
+      {reviewOpen && (
+        <YearInReviewModal year={activeYear} days={days ?? []} onClose={() => setReviewOpen(false)} />
+      )}
     </section>
   );
 }

@@ -4,6 +4,7 @@ import dev.cristianruiz.companion.achievements.dto.AchievementsHeatmap
 import dev.cristianruiz.companion.achievements.dto.AchievementsImportStatus
 import dev.cristianruiz.companion.achievements.dto.GameAchievementsDto
 import dev.cristianruiz.companion.achievements.dto.RareAchievementDto
+import dev.cristianruiz.companion.achievements.dto.YearReviewDto
 import dev.cristianruiz.companion.user.entity.User
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
@@ -46,6 +47,13 @@ class AchievementsController(
         val user = authentication.principal as User
 
         return ResponseEntity.ok(achievementsService.rarestAchievements(user))
+    }
+
+    @GetMapping("/review/{year}")
+    fun yearReview(authentication: Authentication, @PathVariable year: Int): ResponseEntity<YearReviewDto> {
+        val user = authentication.principal as User
+
+        return ResponseEntity.ok(achievementsService.yearReview(user, year))
     }
 
     @GetMapping
