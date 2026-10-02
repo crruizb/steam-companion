@@ -5,6 +5,7 @@ import dev.cristianruiz.companion.achievements.AchievementsRepository
 import dev.cristianruiz.companion.achievements.entity.Achievements
 import dev.cristianruiz.companion.auth.AuthController
 import dev.cristianruiz.companion.exceptions.BadRequestException
+import dev.cristianruiz.companion.games.dto.RandomGameFilter
 import dev.cristianruiz.companion.games.dto.UserGamesDto
 import dev.cristianruiz.companion.games.entity.UserGames
 import dev.cristianruiz.companion.games.entity.UserGamesId
@@ -57,12 +58,27 @@ class GamesService(
         return "Game import started. You will be notified when it completes."
     }
 
-    fun getRandomGame(user: User): UserGamesDto {
+    /**
+     * A random game matching [filter]. [excludeAppId] (the game shown before a reroll) is skipped
+     * unless it's the only match, so rerolling never shows the same game twice in a row.
+     */
+    fun getRandomGame(
+        user: User,
+        filter: RandomGameFilter = RandomGameFilter.ANY,
+        excludeAppId: Int? = null
+    ): UserGamesDto {
         val userGames = gamesRepository.findByUserId(user.id)
         if (userGames.isEmpty()) {
             throw NoSuchElementException("User has no games imported.")
         }
-        return userGames
+        val now = Instant.now()
+        val matching = userGames.filter { filter.matches(it, now) }
+        if (matching.isEmpty()) {
+            throw NoSuchElementException("No games match \"${filter.label}\".")
+        }
+        return matching
+            .filter { it.id.appId != excludeAppId }
+            .ifEmpty { matching }
             .random()
             .toUserGamesDto()
     }

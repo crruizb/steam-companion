@@ -132,3 +132,11 @@ export interface AchievementComparison {
   friendAchievementsPublic: boolean;
   achievements: AchievementComparisonRow[];
 }
+
+/** Narrows the random game picker (sent to the backend as is) */
+export type RandomGameFilter =
+  | "ANY"
+  | "NEVER_PLAYED"
+  | "UNDER_TWO_HOURS"
+  | "NOT_PLAYED_IN_A_YEAR"
+  | "ACHIEVEMENTS_LEFT";

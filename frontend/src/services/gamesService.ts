@@ -1,4 +1,4 @@
-import type { Game, User } from "../types";
+import type { Game, RandomGameFilter, User } from "../types";
 import { apiFetch } from "./api";
 
 export const importGamesFromSteam = async (): Promise<void> => {
@@ -10,7 +10,16 @@ export const fetchOwnedGames = async (): Promise<User> => {
     return response.json()
 }
 
-export const fetchRandomGame = async (): Promise<Game> => {
-    const response = await apiFetch("/games/random", { method: "GET" });
+/** A random game matching the filter; exclude is the game shown before a reroll. */
+export const fetchRandomGame = async ({
+    filter,
+    exclude,
+}: {
+    filter: RandomGameFilter;
+    exclude?: number;
+}): Promise<Game> => {
+    const params = new URLSearchParams({ filter });
+    if (exclude !== undefined) params.set("exclude", String(exclude));
+    const response = await apiFetch(`/games/random?${params}`, { method: "GET" });
     return response.json()
 }

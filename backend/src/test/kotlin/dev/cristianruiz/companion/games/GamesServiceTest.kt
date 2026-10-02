@@ -1,6 +1,7 @@
 package dev.cristianruiz.companion.games
 
 import dev.cristianruiz.companion.exceptions.BadRequestException
+import dev.cristianruiz.companion.games.dto.RandomGameFilter
 import dev.cristianruiz.companion.games.entity.UserGames
 import dev.cristianruiz.companion.games.entity.UserGamesId
 import dev.cristianruiz.companion.steam.PlayerOwnedGame
@@ -15,7 +16,9 @@ import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
+import java.time.Duration
 import java.time.Instant
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -210,4 +213,84 @@ class GamesServiceTest {
         verify { gamesRepository.findByUserId(user.id) }
     }
 
-}
+    @Test
+    fun `should only pick games matching the filter`() {
+        // Given
+        val user = filterUser()
+        val now = Instant.now()
+        every { gamesRepository.findByUserId(user.id) } returns listOf(
+            game(user, 1, "Never played", minutes = 0),
+            game(user, 2, "Barely played", minutes = 30, lastPlayed = now.minus(Duration.ofDays(2))),
+            game(user, 3, "Forgotten", minutes = 600, lastPlayed = now.minus(Duration.ofDays(400))),
+            game(user, 4, "Unfinished", minutes = 600, lastPlayed = now, achievements = 3 to 10),
+            game(user, 5, "Perfect", minutes = 600, lastPlayed = now, achievements = 10 to 10)
+        )
+
+        // When / Then: each filter has exactly one match, so the pick is deterministic
+        mapOf(
+            RandomGameFilter.NEVER_PLAYED to "Never played",
+            RandomGameFilter.UNDER_TWO_HOURS to "Barely played",
+            RandomGameFilter.NOT_PLAYED_IN_A_YEAR to "Forgotten",
+            RandomGameFilter.ACHIEVEMENTS_LEFT to "Unfinished"
+        ).forEach { (filter, expected) ->
+            assertEquals(expected, gamesService.getRandomGame(user, filter).name, "filter $filter")
+        }
+    }
+
+    @Test
+    fun `should explain when no game matches the filter`() {
+        // Given
+        val user = filterUser()
+        every { gamesRepository.findByUserId(user.id) } returns listOf(game(user, 1, "Played", minutes = 600))
+
+        // When / Then
+        val error = assertFailsWith<NoSuchElementException> {
+            gamesService.getRandomGame(user, RandomGameFilter.NEVER_PLAYED)
+        }
+        assertEquals("No games match \"Never played\".", error.message)
+    }
+
+    @Test
+    fun `should not pick the excluded game again unless it is the only match`() {
+        // Given
+        val user = filterUser()
+        every { gamesRepository.findByUserId(user.id) } returns listOf(
+            game(user, 1, "First", minutes = 0), game(user, 2, "Second", minutes = 0), game(user, 3, "Played", minutes = 600)
+        )
+
+        // When / Then: random, so repeat to make a lucky pass unlikely
+        repeat(20) {
+            assertEquals(2, gamesService.getRandomGame(user, RandomGameFilter.NEVER_PLAYED, excludeAppId = 1).appId)
+        }
+        // Rerolling the only match gives it back rather than nothing
+        every { gamesRepository.findByUserId(user.id) } returns listOf(game(user, 1, "Only", minutes = 0))
+        assertEquals(1, gamesService.getRandomGame(user, RandomGameFilter.NEVER_PLAYED, excludeAppId = 1).appId)
+    }
+
+    private fun filterUser() = User(
+        id = 1,
+        steamId = "123456789",
+        username = "testuser",
+        displayName = "Test User",
+        avatarUrl = null,
+        profileUrl = "http://profile.url"
+    )
+
+    private fun game(
+        user: User,
+        appId: Int,
+        name: String,
+        minutes: Int,
+        lastPlayed: Instant? = null,
+        achievements: Pair<Int, Int>? = null
+    ) = UserGames(
+        id = UserGamesId(user.id, appId),
+        user = user,
+        name = name,
+        playTimeForeverMinutes = minutes,
+        imgUrl = null,
+        lastPlayedAt = lastPlayed,
+        achievementsUnlocked = achievements?.first,
+        achievementsTotal = achievements?.second
+    )
+}

@@ -1,5 +1,6 @@
 package dev.cristianruiz.companion.games
 
+import dev.cristianruiz.companion.games.dto.RandomGameFilter
 import dev.cristianruiz.companion.games.dto.UserGamesDto
 import dev.cristianruiz.companion.user.entity.User
 import org.springframework.http.HttpStatus
@@ -8,6 +9,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -25,9 +27,13 @@ class GamesController(
     }
 
     @GetMapping("/random")
-    fun randomGame(authentication: Authentication): ResponseEntity<UserGamesDto> {
+    fun randomGame(
+        authentication: Authentication,
+        @RequestParam(defaultValue = "ANY") filter: RandomGameFilter,
+        @RequestParam(required = false) exclude: Int?
+    ): ResponseEntity<UserGamesDto> {
         val user = authentication.principal as User
-        val randomGame = gamesService.getRandomGame(user)
+        val randomGame = gamesService.getRandomGame(user, filter, exclude)
 
         return ResponseEntity
             .status(HttpStatus.OK)

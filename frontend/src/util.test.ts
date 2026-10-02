@@ -11,6 +11,7 @@ import {
   longestStreak,
   parseLocalDate,
   shuffle,
+  timeAgo,
 } from "./util";
 
 describe("test setup", () => {
@@ -195,5 +196,21 @@ describe("filterAndSortGames", () => {
     expect(run({ sort: "shuffle" })).toEqual(before);
     run({ sort: "name" });
     expect(names(library)).toEqual(before);
+  });
+});
+
+describe("timeAgo", () => {
+  const now = new Date(2025, 5, 15, 12);
+
+  it("uses the largest whole unit", () => {
+    expect(timeAgo(new Date(2025, 5, 15, 8), now)).toBe("today");
+    expect(timeAgo(new Date(2025, 5, 14, 12), now)).toBe("yesterday");
+    expect(timeAgo(new Date(2025, 5, 3, 12), now)).toBe("12 days ago");
+    expect(timeAgo(new Date(2025, 1, 1), now)).toBe("4 months ago");
+    expect(timeAgo(new Date(2022, 5, 1), now)).toBe("3 years ago");
+  });
+
+  it("treats future dates as today", () => {
+    expect(timeAgo(new Date(2025, 5, 20), now)).toBe("today");
   });
 });

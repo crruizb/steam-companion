@@ -145,6 +145,16 @@ export function formatNumber(value: number): string {
   return value < 10_000 ? fullFormat.format(value) : compactFormat.format(value);
 }
 
+const relativeFormat = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+/** How long ago a date was, in its largest whole unit: "today", "12 days ago", "3 years ago". */
+export function timeAgo(date: Date, now: Date = new Date()): string {
+  const days = Math.floor((now.getTime() - date.getTime()) / 86_400_000);
+  if (days >= 365) return relativeFormat.format(-Math.floor(days / 365), "year");
+  if (days >= 30) return relativeFormat.format(-Math.floor(days / 30), "month");
+  return relativeFormat.format(-Math.max(days, 0), "day");
+}
+
 /** Longest run of consecutive days with at least one achievement. Expects every day present (see fillMissingDays). */
 export function longestStreak(days: AchievementsPerDate[]): number {
   let longest = 0;

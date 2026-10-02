@@ -203,6 +203,33 @@ class GamesControllerIntegrationTest {
     }
 
     @Test
+    fun `should pick a random game with a filter and skip the excluded game`() {
+        mockMvc.perform(post("/api/games/import").header("Authorization", "Bearer $validJwtToken"))
+            .andExpect(status().isAccepted)
+
+        // Both test games were played for over 2 hours; Dota 2 (570) excluded leaves CS:GO (730)
+        mockMvc.perform(
+            get("/api/games/random?filter=ANY&exclude=570").header("Authorization", "Bearer $validJwtToken")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.appId").value(730))
+
+        mockMvc.perform(
+            get("/api/games/random?filter=NEVER_PLAYED").header("Authorization", "Bearer $validJwtToken")
+        )
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.message").value("No games match \"Never played\"."))
+    }
+
+    @Test
+    fun `should reject an unknown random game filter`() {
+        mockMvc.perform(
+            get("/api/games/random?filter=SOMETHING").header("Authorization", "Bearer $validJwtToken")
+        )
+            .andExpect(status().isBadRequest)
+    }
+
+    @Test
     fun `should return 404 if user has no gams imported`() {
         mockMvc.perform(
             get("/api/games/random")

@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { User } from "../types";
+import type { Game, RandomGameFilter, User } from "../types";
 import {
   fetchOwnedGames,
   fetchRandomGame,
@@ -55,17 +56,71 @@ export function useUserGames() {
   });
 }
 
-// A mutation, not a query, although it's a GET: it should only run on click and every
-// click needs a fresh pick, so none of useQuery's automatic fetching or caching applies
-export function useRandomGame() {
-  return useMutation({
-    mutationFn: fetchRandomGame,
-    onError: (error) => {
-      toast.error(
-        error instanceof ApiError && error.status === 404
-          ? "Import your games first, then we can pick one for you."
-          : "Could not pick a random game. Please try again."
-      );
+export const RANDOM_GAME_FILTERS: { value: RandomGameFilter; label: string }[] = [
+  { value: "ANY", label: "Any game" },
+  { value: "NEVER_PLAYED", label: "Never played" },
+  { value: "UNDER_TWO_HOURS", label: "Under 2 hours" },
+  { value: "NOT_PLAYED_IN_A_YEAR", label: "Not played in a year" },
+  { value: "ACHIEVEMENTS_LEFT", label: "Achievements left" },
+];
+
+// The last used filter is a per-browser convenience; storage can be unavailable (private mode)
+const FILTER_STORAGE_KEY = "randomGameFilter";
+const loadFilter = (): RandomGameFilter => {
+  try {
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+    return RANDOM_GAME_FILTERS.some((f) => f.value === stored) ? (stored as RandomGameFilter) : "ANY";
+  } catch {
+    return "ANY";
+  }
+};
+const saveFilter = (filter: RandomGameFilter) => {
+  try {
+    localStorage.setItem(FILTER_STORAGE_KEY, filter);
+  } catch {
+    // Not remembered, but the filter still applies
+  }
+};
+
+/**
+ * State for the random game picker dialog. Picks are a mutation, not a query, although it's a
+ * GET: they only run on click and every click needs a fresh pick, so no caching applies.
+ * Rerolls and filter changes skip the game on screen, so the same game never shows twice in a row.
+ */
+export function useRandomGamePicker() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [filter, setFilter] = useState<RandomGameFilter>(loadFilter);
+  const [game, setGame] = useState<Game | null>(null);
+  const { mutate, isPending, error, reset } = useMutation({ mutationFn: fetchRandomGame });
+
+  const pick = (nextFilter: RandomGameFilter, exclude?: number) =>
+    mutate({ filter: nextFilter, exclude }, { onSuccess: setGame, onError: () => setGame(null) });
+
+  return {
+    isOpen,
+    filter,
+    game,
+    isPicking: isPending,
+    // 404 carries the reason: no games imported, or none match the filter
+    error: error
+      ? error instanceof ApiError && error.status === 404
+        ? error.message
+        : "Could not pick a random game. Please try again."
+      : null,
+    open: () => {
+      setIsOpen(true);
+      pick(filter);
     },
-  });
+    reroll: () => pick(filter, game?.appId),
+    changeFilter: (next: RandomGameFilter) => {
+      setFilter(next);
+      saveFilter(next);
+      pick(next, game?.appId);
+    },
+    close: () => {
+      setIsOpen(false);
+      setGame(null);
+      reset();
+    },
+  };
 }
