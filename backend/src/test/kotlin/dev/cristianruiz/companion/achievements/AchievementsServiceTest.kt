@@ -118,6 +118,26 @@ class AchievementsServiceTest {
     }
 
     @Test
+    fun `should not fetch achievement details when nothing is unlocked`() {
+        // Given
+        every { steamUserApiClient.getPlayerAchievements(user.steamId, 570) } returns PlayerAchievementsResponse(
+            PlayerStats(
+                steamID = user.steamId,
+                gameName = "Dota 2",
+                achievements = listOf(Achievement(apiName = "LOCKED", achieved = 0, unlockTime = 0))
+            )
+        )
+        every { achievementsRepository.findNamesByUserIdAndAppId(user.id, 570) } returns emptyList()
+
+        // When
+        achievementsService.importGameAchievements(user, 570, "Dota 2")
+
+        // Then
+        verify { gamesRepository.updateAchievementProgress(user.id, 570, total = 1, unlocked = 0) }
+        verify(exactly = 0) { achievementSchemaService.refreshIfStale(any(), any()) }
+    }
+
+    @Test
     fun `should list unlocked achievements newest first, then locked ones from most to least common`() {
         // Given
         val firstUnlock = OffsetDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
@@ -155,6 +175,7 @@ class AchievementsServiceTest {
         assertEquals(null, byName["SECRET_LOCKED"]?.description)
         // Unlocked but unknown to the stored details: falls back to the API name
         assertEquals("NOT_IN_SCHEMA", byName["NOT_IN_SCHEMA"]?.displayName)
+        verify { achievementSchemaService.refreshIfStale(570, any()) }
     }
 
     @Test
@@ -236,6 +257,24 @@ class AchievementsServiceTest {
     }
 
     @Test
+    fun `should skip games that were never played`() {
+        // Given
+        every { gamesRepository.findByUserId(user.id) } returns listOf(
+            userGame(570, "Dota 2"),
+            userGame(730, "CS2", playTimeForeverMinutes = 0)
+        )
+        every { steamUserApiClient.getPlayerAchievements(user.steamId, 570) } returns null
+
+        // When
+        val started = achievementsService.importAchievements(user)
+
+        // Then
+        assertEquals(AchievementsImportStatus(ImportState.RUNNING, totalGames = 1), started)
+        assertEquals(ImportState.COMPLETED, awaitImportFinished().state)
+        verify(exactly = 0) { steamUserApiClient.getPlayerAchievements(user.steamId, 730) }
+    }
+
+    @Test
     fun `should not start a second import while one is running`() {
         // Given
         every { gamesRepository.findByUserId(user.id) } returns listOf(userGame(570, "Dota 2"), userGame(730, "CS2"))
@@ -310,11 +349,11 @@ class AchievementsServiceTest {
         globalPercent = globalPercent
     )
 
-    private fun userGame(appId: Int, name: String) = UserGames(
+    private fun userGame(appId: Int, name: String, playTimeForeverMinutes: Int = 60) = UserGames(
         id = UserGamesId(user.id, appId),
         user = user,
         name = name,
-        playTimeForeverMinutes = 0,
+        playTimeForeverMinutes = playTimeForeverMinutes,
         imgUrl = null
     )
 

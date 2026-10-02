@@ -55,7 +55,9 @@ class AchievementsService(
         if (userGames.isEmpty()) {
             throw BadRequestException("User has no games imported")
         }
-        val started = AchievementsImportStatus(ImportState.RUNNING, totalGames = userGames.size)
+        // A game never played can't have unlocks, and big libraries are mostly those: skip their requests
+        val playedGames = userGames.filter { it.playTimeForeverMinutes > 0 }
+        val started = AchievementsImportStatus(ImportState.RUNNING, totalGames = playedGames.size)
         // Atomic check-and-set, so two clicks can't start two imports
         val current = importStatuses.compute(user.id) { _, existing ->
             if (existing?.state == ImportState.RUNNING) existing else started
@@ -68,7 +70,7 @@ class AchievementsService(
         importScope.launch {
             var status = started
             try {
-                userGames.forEach { ug ->
+                playedGames.forEach { ug ->
                     val imported = importGameAchievements(user, ug.id.appId, ug.name)
                     status = status.copy(
                         processedGames = status.processedGames + 1,
@@ -119,7 +121,8 @@ class AchievementsService(
             if (achievementsEntity.isNotEmpty()) {
                 achievementsRepository.saveAll(achievementsEntity)
             }
-            if (achievements.isNotEmpty()) {
+            // Details only matter once something is unlocked; otherwise the achievements dialog fetches them
+            if (achievements.any { it.achieved == 1 }) {
                 achievementSchemaService.refreshIfStale(appId)
             }
             return achievementsEntity.size
@@ -134,6 +137,8 @@ class AchievementsService(
      * locked ones from most to least common. Without stored details, only the unlocked ones by API name.
      */
     fun gameAchievements(user: User, appId: Int): GameAchievementsDto {
+        // Imports skip games without unlocks, so their details may not be stored yet
+        achievementSchemaService.refreshIfStale(appId)
         val unlockTimes = achievementsRepository.findByUserIdAndAppId(user.id, appId)
             .associate { it.name to it.unlockTime }
         val details = gameAchievementsRepository.findByAppId(appId)
