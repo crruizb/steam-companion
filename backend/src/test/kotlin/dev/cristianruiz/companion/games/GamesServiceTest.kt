@@ -36,7 +36,7 @@ class GamesServiceTest {
     }
 
     @Test
-    fun `should import all user games`() {
+    fun `should import all user games and keep their achievement progress`() {
         // Given
         val user = User(
             id = 1,
@@ -66,6 +66,18 @@ class GamesServiceTest {
         )
         val playerOwnedGamesResponse = PlayerOwnedGamesResponse(response = playerOwnedGames)
         every { steamUserApiClient.getOwnedGames(user.steamId) } returns playerOwnedGamesResponse
+        // Dota 2 was imported before and has been through an achievements import
+        every { gamesRepository.findByUserId(user.id) } returns listOf(
+            UserGames(
+                id = UserGamesId(user.id, 570),
+                name = "Dota 2",
+                playTimeForeverMinutes = 1000,
+                imgUrl = null,
+                achievementsTotal = 40,
+                achievementsUnlocked = 10,
+                user = user
+            )
+        )
 
         val userGames = listOf(
             UserGames(
@@ -74,6 +86,8 @@ class GamesServiceTest {
                 playTimeForeverMinutes = 1500,
                 imgUrl = "https://media.steampowered.com/steamcommunity/public/images/apps/570/icon1.jpg",
                 lastPlayedAt = Instant.ofEpochSecond(1700000000),
+                achievementsTotal = 40,
+                achievementsUnlocked = 10,
                 user = user
             ),
             // Never played (Steam sends 0): no last played date
@@ -125,6 +139,7 @@ class GamesServiceTest {
         )
         every { steamUserApiClient.getOwnedGames(user.steamId) } returns
             PlayerOwnedGamesResponse(PlayerOwnedGames(gameCount = 0))
+        every { gamesRepository.findByUserId(user.id) } returns emptyList()
         every { gamesRepository.saveAll(emptyList<UserGames>()) } returns emptyList()
 
         // When

@@ -3,16 +3,27 @@ import toast from "react-hot-toast";
 import {
   achievementsFromUser,
   achievementsImportStatus,
+  gameAchievements,
   importAchievementsFromUser,
+  rarestAchievements,
 } from "../services/achievementsService.ts";
 import { ApiError, isAuthError } from "../services/api.ts";
-import type { AchievementsHeatmap, AchievementsImportStatus } from "../types/index.ts";
+import type {
+  AchievementsHeatmap,
+  AchievementsImportStatus,
+  GameAchievements,
+  RareAchievement,
+} from "../types/index.ts";
+import { gamesKeys } from "./useGames.ts";
 
 export const achievementsKeys = {
   all: ["achievements"] as const,
   user: () => [...achievementsKeys.all, "userachievements"] as const,
   import: () => [...achievementsKeys.all, "import"] as const,
   importStatus: () => [...achievementsKeys.all, "import", "status"] as const,
+  games: () => [...achievementsKeys.all, "games"] as const,
+  game: (appId: number) => [...achievementsKeys.games(), appId] as const,
+  rarest: () => [...achievementsKeys.all, "rarest"] as const,
 };
 
 // One id for every import toast, so the progress toast is replaced by the result
@@ -37,6 +48,10 @@ export function useAchievementsImportStatus() {
       if (previous?.state === "RUNNING" && status.state !== "RUNNING") {
         onImportFinished(status);
         queryClient.invalidateQueries({ queryKey: achievementsKeys.user() });
+        queryClient.invalidateQueries({ queryKey: achievementsKeys.games() });
+        queryClient.invalidateQueries({ queryKey: achievementsKeys.rarest() });
+        // Per-game achievement progress comes with the games
+        queryClient.invalidateQueries({ queryKey: gamesKeys.user() });
       }
       return status;
     },
@@ -94,6 +109,27 @@ export function useAchievementsImport() {
       ? `${status.processedGames}/${status.totalGames} games`
       : null,
   };
+}
+
+/** Every achievement of one game with the user's unlocks. Pass null to skip fetching. */
+export function useGameAchievements(appId: number | null) {
+  return useQuery({
+    queryKey: achievementsKeys.game(appId ?? 0),
+    queryFn: (): Promise<GameAchievements> => gameAchievements(appId!),
+    enabled: appId !== null,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: (failureCount, error) => !isAuthError(error) && failureCount < 2,
+  });
+}
+
+/** The user's unlocked achievements that the fewest Steam players have, rarest first. */
+export function useRarestAchievements() {
+  return useQuery({
+    queryKey: achievementsKeys.rarest(),
+    queryFn: (): Promise<RareAchievement[]> => rarestAchievements(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: (failureCount, error) => !isAuthError(error) && failureCount < 2,
+  });
 }
 
 export function useAchievements() {

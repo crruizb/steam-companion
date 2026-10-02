@@ -9,6 +9,8 @@ type ModalProps = {
   children: ReactNode;
   /** Footer buttons. Defaults to a single Close button. */
   footer?: ReactNode;
+  /** Wider dialog, for lists */
+  wide?: boolean;
 };
 
 export default function Modal({
@@ -17,6 +19,7 @@ export default function Modal({
   title,
   children,
   footer,
+  wide = false,
 }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -41,7 +44,9 @@ export default function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative z-10 w-full max-w-md rounded-2xl border border-line/60 bg-card p-6 shadow-2xl shadow-black/40"
+        className={`relative z-10 flex max-h-[90vh] w-full flex-col rounded-2xl border border-line/60 bg-card p-6 shadow-2xl shadow-black/40 ${
+          wide ? "max-w-xl" : "max-w-md"
+        }`}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           {title && <h2 className="text-lg font-semibold text-heading">{title}</h2>}
@@ -55,7 +60,8 @@ export default function Modal({
           </button>
         </div>
 
-        <div>{children}</div>
+        {/* Long content scrolls inside the dialog; the title and buttons stay in view */}
+        <div className="-mx-6 min-h-0 overflow-y-auto px-6">{children}</div>
 
         <div className="mt-6 flex flex-wrap justify-end gap-2">
           {footer ?? (

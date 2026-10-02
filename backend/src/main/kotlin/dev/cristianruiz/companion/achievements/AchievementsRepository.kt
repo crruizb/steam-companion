@@ -19,4 +19,6 @@ interface AchievementsRepository: JpaRepository<Achievements, Long> {
 
     @Query("SELECT a.name FROM Achievements a WHERE a.userId = :userId AND a.appId = :appId")
     fun findNamesByUserIdAndAppId(userId: Long, appId: Int): List<String>
+
+    fun findByUserIdAndAppId(userId: Long, appId: Int): List<Achievements>
 }

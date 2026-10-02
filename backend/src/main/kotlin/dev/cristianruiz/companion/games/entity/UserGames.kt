@@ -42,6 +42,12 @@ data class UserGames(
     @Column(name = "last_played_at")
     var lastPlayedAt: Instant? = null,
 
+    @Column(name = "achievements_total")
+    var achievementsTotal: Int? = null,
+
+    @Column(name = "achievements_unlocked")
+    var achievementsUnlocked: Int? = null,
+
     @CreatedDate
     @Column(name = "created_at")
     var createdAt: Instant? = null,
@@ -56,7 +62,9 @@ data class UserGames(
             playTimeForeverMinutes = this.playTimeForeverMinutes,
             name = this.name,
             imgUrl = this.imgUrl,
-            lastPlayedAt = this.lastPlayedAt
+            lastPlayedAt = this.lastPlayedAt,
+            achievementsTotal = this.achievementsTotal,
+            achievementsUnlocked = this.achievementsUnlocked
         )
     }
 }

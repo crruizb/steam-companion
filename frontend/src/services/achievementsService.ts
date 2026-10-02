@@ -1,4 +1,9 @@
-import type { AchievementsHeatmap, AchievementsImportStatus } from "../types";
+import type {
+  AchievementsHeatmap,
+  AchievementsImportStatus,
+  GameAchievements,
+  RareAchievement,
+} from "../types";
 import { apiFetch } from "./api";
 
 export const importAchievementsFromUser = async (): Promise<AchievementsImportStatus> => {
@@ -8,6 +13,16 @@ export const importAchievementsFromUser = async (): Promise<AchievementsImportSt
 
 export const achievementsImportStatus = async (): Promise<AchievementsImportStatus> => {
   const response = await apiFetch("/achievements/import/status", { method: "GET" });
+  return response.json();
+};
+
+export const gameAchievements = async (appId: number): Promise<GameAchievements> => {
+  const response = await apiFetch(`/achievements/games/${appId}`, { method: "GET" });
+  return response.json();
+};
+
+export const rarestAchievements = async (): Promise<RareAchievement[]> => {
+  const response = await apiFetch("/achievements/rarest", { method: "GET" });
   return response.json();
 };
 

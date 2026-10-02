@@ -38,13 +38,18 @@ class GamesService(
             )
         }
         val ownedGames = ownedGamesResult.games.orEmpty()
+        // Achievement progress comes from the achievements import, so keep it when re-importing games
+        val existingGames = gamesRepository.findByUserId(user.id).associateBy { it.id.appId }
         val userGames = ownedGames.map { og ->
+            val existing = existingGames[og.appId]
             UserGames(
                 id = UserGamesId(user.id, og.appId),
                 name = og.name,
                 playTimeForeverMinutes = og.playtimeForever,
                 imgUrl = "https://media.steampowered.com/steamcommunity/public/images/apps/${og.appId}/${og.imgIconUrl}.jpg",
                 lastPlayedAt = og.rtimeLastPlayed.takeIf { it > 0 }?.let(Instant::ofEpochSecond),
+                achievementsTotal = existing?.achievementsTotal,
+                achievementsUnlocked = existing?.achievementsUnlocked,
                 user = user
             )
         }

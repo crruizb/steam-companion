@@ -68,6 +68,10 @@ class TestSteamUserApiClient: SteamUserApiClient {
     ): PlayerAchievementsResponse? {
         TODO("Not yet implemented")
     }
+
+    override fun getGameSchema(appId: Int) = throw NotImplementedError()
+
+    override fun getGlobalAchievementPercentages(appId: Int) = throw NotImplementedError()
 }
 
 @SpringBootTest

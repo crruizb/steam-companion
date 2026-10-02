@@ -10,7 +10,8 @@ data class PlayerAchievementsResponse(
 data class PlayerStats(
     val steamID: String,
     val gameName: String,
-    val achievements: List<Achievement>
+    // Absent for games without achievements
+    val achievements: List<Achievement>? = null
 )
 
 data class Achievement(

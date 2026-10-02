@@ -5,6 +5,8 @@ import Login from "../components/Login.tsx";
 import ProfileHero from "../components/ProfileHero.tsx";
 import StatsOverview from "../components/StatsOverview.tsx";
 import AchievementsHeatmap from "../components/AchievementsHeatmap.tsx";
+import AchievementProgress from "../components/AchievementProgress.tsx";
+import PlaytimeInsights from "../components/PlaytimeInsights.tsx";
 import GameLibrary from "../components/GameLibrary.tsx";
 import { primaryButton } from "../components/buttonStyles.ts";
 
@@ -40,7 +42,9 @@ function HomePage() {
           <div className="space-y-6">
             <ProfileHero user={user} />
             <StatsOverview />
+            <PlaytimeInsights />
             <AchievementsHeatmap />
+            <AchievementProgress />
             <div className="pt-4">
               <GameLibrary />
             </div>

@@ -10,6 +10,8 @@ interface SteamUserApiClient {
     fun getPlayerSummaries(steamIds: List<String>): PlayerSummaries
     fun getOwnedGames(steamId: String): PlayerOwnedGamesResponse
     fun getPlayerAchievements(steamId: String, appId: Int): PlayerAchievementsResponse?
+    fun getGameSchema(appId: Int): GameSchemaResponse?
+    fun getGlobalAchievementPercentages(appId: Int): GlobalAchievementPercentagesResponse?
 }
 
 @Service
@@ -40,6 +42,16 @@ class HttpSteamUserApiClient(
         val url = "$steamApiUrl/ISteamUserStats/GetPlayerAchievements/v0001/?key=$apiKey&steamid=$steamId&appid=$appId"
         return restTemplate
             .getForObject(url, PlayerAchievementsResponse::class.java)
+    }
+
+    override fun getGameSchema(appId: Int): GameSchemaResponse? {
+        val url = "$steamApiUrl/ISteamUserStats/GetSchemaForGame/v2/?key=$apiKey&appid=$appId&l=english"
+        return restTemplate.getForObject(url, GameSchemaResponse::class.java)
+    }
+
+    override fun getGlobalAchievementPercentages(appId: Int): GlobalAchievementPercentagesResponse? {
+        val url = "$steamApiUrl/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=$appId"
+        return restTemplate.getForObject(url, GlobalAchievementPercentagesResponse::class.java)
     }
 
 }
