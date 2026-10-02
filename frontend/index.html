@@ -4,7 +4,49 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Steam Companion</title>
+    <title>Steam Companion – Your Steam library, playtime and achievements at a glance</title>
+    <meta
+      name="description"
+      content="Log in with Steam to explore your game library, playtime stats and achievement history. See a year-by-year achievement heatmap, compare with friends and pick a random game to play."
+    />
+    <link rel="canonical" href="https://steamcompanion.dpdns.org/" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#171a21" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- Open Graph / social previews -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Steam Companion" />
+    <meta property="og:url" content="https://steamcompanion.dpdns.org/" />
+    <meta property="og:title" content="Steam Companion – Your Steam library at a glance" />
+    <meta
+      property="og:description"
+      content="Explore your Steam games, playtime and achievement history in one place."
+    />
+    <meta property="og:image" content="https://steamcompanion.dpdns.org/favicon.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Steam Companion logo" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Steam Companion – Your Steam library at a glance" />
+    <meta
+      name="twitter:description"
+      content="Explore your Steam games, playtime and achievement history in one place."
+    />
+    <meta name="twitter:image" content="https://steamcompanion.dpdns.org/favicon.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Steam Companion",
+        "url": "https://steamcompanion.dpdns.org/",
+        "description": "Explore your Steam game library, playtime stats and achievement history in one place.",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
     <script>
       // Apply the theme before the page renders, so it never flashes the wrong one.
       // Saved choice first (see src/theme.ts), then the system preference.
@@ -22,6 +64,13 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Steam Companion</h1>
+      <p>
+        Your Steam library, at a glance. Log in with Steam to explore your games, playtime and
+        achievement history in one place. Please enable JavaScript to use this app.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
