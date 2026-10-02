@@ -1,6 +1,7 @@
 package dev.cristianruiz.companion.achievements
 
 import dev.cristianruiz.companion.achievements.dto.AchievementsHeatmap
+import dev.cristianruiz.companion.achievements.dto.AchievementsImportStatus
 import dev.cristianruiz.companion.user.entity.User
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
@@ -16,11 +17,18 @@ class AchievementsController(
 ) {
 
     @PostMapping("/import")
-    fun importAchievements(authentication: Authentication): ResponseEntity<Void> {
+    fun importAchievements(authentication: Authentication): ResponseEntity<AchievementsImportStatus> {
         val user = authentication.principal as User
-        achievementsService.importAchievements(user)
+        val status = achievementsService.importAchievements(user)
 
-        return ResponseEntity.accepted().build()
+        return ResponseEntity.accepted().body(status)
+    }
+
+    @GetMapping("/import/status")
+    fun importStatus(authentication: Authentication): ResponseEntity<AchievementsImportStatus> {
+        val user = authentication.principal as User
+
+        return ResponseEntity.ok(achievementsService.importStatus(user))
     }
 
     @GetMapping

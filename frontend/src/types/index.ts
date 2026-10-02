@@ -25,3 +25,12 @@ export interface AchievementsPerDate {
 export interface AchievementsHeatmap {
   achievementsPerDate: Record<number, AchievementsPerDate[]>;
 }
+
+export type AchievementsImportState = "IDLE" | "RUNNING" | "COMPLETED" | "FAILED";
+
+export interface AchievementsImportStatus {
+  state: AchievementsImportState;
+  processedGames: number;
+  totalGames: number;
+  importedAchievements: number;
+}

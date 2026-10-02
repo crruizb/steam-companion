@@ -1,15 +1,14 @@
 import { useState } from "react";
-import { Clock, Dices, Download, ExternalLink, Trophy } from "lucide-react";
+import { Clock, Dices, Download, ExternalLink } from "lucide-react";
 import { useImportGames, useRandomGame } from "../hooks/useGames";
-import { useImportAchievements } from "../hooks/useAchievements";
 import type { Game } from "../types";
 import { formatPlayTime } from "../util";
+import ImportAchievementsButton from "./ImportAchievementsButton";
 import Modal from "./Modal";
 import { primaryButton, secondaryButton } from "./buttonStyles";
 
 export default function QuickActions() {
   const { mutate: importGames, isPending: isImportingGames } = useImportGames();
-  const { mutate: importAchievements, isPending: isImportingAchievements } = useImportAchievements();
   const { mutate: pickRandomGame, isPending: isPicking } = useRandomGame();
   const [randomGame, setRandomGame] = useState<Game | null>(null);
 
@@ -30,15 +29,7 @@ export default function QuickActions() {
           <Download className="h-4 w-4" />
           Import games
         </button>
-        <button
-          type="button"
-          className={secondaryButton}
-          onClick={() => importAchievements()}
-          disabled={isImportingAchievements}
-        >
-          <Trophy className="h-4 w-4" />
-          Import achievements
-        </button>
+        <ImportAchievementsButton className={secondaryButton} />
         <button type="button" className={primaryButton} onClick={handleRandomGame} disabled={isPicking}>
           <Dices className="h-4 w-4" />
           Pick a random game

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { Flame, Trophy } from "lucide-react";
-import { useAchievements, useImportAchievements } from "../hooks/useAchievements";
+import { useAchievements } from "../hooks/useAchievements";
 import {
   fillMissingDays,
   generateMonthLabels,
@@ -10,14 +10,13 @@ import {
   parseLocalDate,
 } from "../util";
 import { primaryButton } from "./buttonStyles";
+import ImportAchievementsButton from "./ImportAchievementsButton";
 
 const WEEKDAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""]; // Rows start on Sunday
 
 const cardClass = "rounded-2xl border border-line/60 bg-card p-5 sm:p-6";
 
 function EmptyState() {
-  const { mutate: importAchievements, isPending } = useImportAchievements();
-
   return (
     <section className={`${cardClass} flex flex-col items-center py-10 text-center`}>
       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/15 text-accent">
@@ -27,15 +26,7 @@ function EmptyState() {
       <p className="mt-1 max-w-sm text-sm text-muted">
         Import your achievements from Steam to see which days you unlocked them.
       </p>
-      <button
-        type="button"
-        className={`${primaryButton} mt-5`}
-        onClick={() => importAchievements()}
-        disabled={isPending}
-      >
-        <Trophy className="h-4 w-4" />
-        Import achievements
-      </button>
+      <ImportAchievementsButton className={`${primaryButton} mt-5`} />
     </section>
   );
 }

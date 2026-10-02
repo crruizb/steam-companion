@@ -1,9 +1,14 @@
 package dev.cristianruiz.companion.achievements
 
+import dev.cristianruiz.companion.achievements.dto.AchievementsImportStatus
 import dev.cristianruiz.companion.achievements.dto.AchievementsPerDate
 import dev.cristianruiz.companion.achievements.dto.AchievementsPerSqlDate
+import dev.cristianruiz.companion.achievements.dto.ImportState
 import dev.cristianruiz.companion.achievements.entity.Achievements
+import dev.cristianruiz.companion.exceptions.BadRequestException
 import dev.cristianruiz.companion.games.GamesRepository
+import dev.cristianruiz.companion.games.entity.UserGames
+import dev.cristianruiz.companion.games.entity.UserGamesId
 import dev.cristianruiz.companion.steam.Achievement
 import dev.cristianruiz.companion.steam.PlayerAchievementsResponse
 import dev.cristianruiz.companion.steam.PlayerStats
@@ -20,6 +25,7 @@ import java.sql.Date
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 @ExtendWith(MockKExtension::class)
 class AchievementsServiceTest {
@@ -96,6 +102,63 @@ class AchievementsServiceTest {
     }
 
     @Test
+    fun `should report progress while importing and the totals once completed`() {
+        // Given
+        every { gamesRepository.findByUserId(user.id) } returns listOf(userGame(570, "Dota 2"), userGame(730, "CS2"))
+        every { steamUserApiClient.getPlayerAchievements(user.steamId, 570) } returns PlayerAchievementsResponse(
+            PlayerStats(
+                steamID = user.steamId,
+                gameName = "Dota 2",
+                achievements = listOf(
+                    Achievement(apiName = "FIRST", achieved = 1, unlockTime = 1700000000),
+                    Achievement(apiName = "SECOND", achieved = 1, unlockTime = 1710000000)
+                )
+            )
+        )
+        every { steamUserApiClient.getPlayerAchievements(user.steamId, 730) } returns null
+        every { achievementsRepository.findNamesByUserIdAndAppId(user.id, any()) } returns emptyList()
+        every { achievementsRepository.saveAll(any<List<Achievements>>()) } answers { firstArg() }
+
+        // When
+        val started = achievementsService.importAchievements(user)
+
+        // Then
+        assertEquals(AchievementsImportStatus(ImportState.RUNNING, totalGames = 2), started)
+        assertEquals(
+            AchievementsImportStatus(ImportState.COMPLETED, processedGames = 2, totalGames = 2, importedAchievements = 2),
+            awaitImportFinished()
+        )
+    }
+
+    @Test
+    fun `should not start a second import while one is running`() {
+        // Given
+        every { gamesRepository.findByUserId(user.id) } returns listOf(userGame(570, "Dota 2"), userGame(730, "CS2"))
+        every { steamUserApiClient.getPlayerAchievements(user.steamId, any()) } returns null
+
+        // When
+        val first = achievementsService.importAchievements(user)
+        val second = achievementsService.importAchievements(user)
+        awaitImportFinished()
+
+        // Then
+        assertEquals(ImportState.RUNNING, first.state)
+        assertEquals(ImportState.RUNNING, second.state)
+        verify(exactly = 1) { steamUserApiClient.getPlayerAchievements(user.steamId, 570) }
+    }
+
+    @Test
+    fun `should be idle before any import and reject imports without games`() {
+        // Given
+        every { gamesRepository.findByUserId(user.id) } returns emptyList()
+
+        // When / Then
+        assertEquals(AchievementsImportStatus.IDLE, achievementsService.importStatus(user))
+        assertFailsWith<BadRequestException> { achievementsService.importAchievements(user) }
+        assertEquals(AchievementsImportStatus.IDLE, achievementsService.importStatus(user))
+    }
+
+    @Test
     fun `should group achievements per day by year for the heatmap`() {
         // Given
         every { achievementsRepository.getAchievementsGroupedByUnlockTime(user.id) } returns listOf(
@@ -130,5 +193,24 @@ class AchievementsServiceTest {
 
         // Then
         assertEquals(emptyMap(), heatmap.achievementsPerDate)
+    }
+
+    private fun userGame(appId: Int, name: String) = UserGames(
+        id = UserGamesId(user.id, appId),
+        user = user,
+        name = name,
+        playTimeForeverMinutes = 0,
+        imgUrl = null
+    )
+
+    // The import runs in a background coroutine with a delay between games, so poll its status
+    private fun awaitImportFinished(timeoutMillis: Long = 5_000): AchievementsImportStatus {
+        val deadline = System.currentTimeMillis() + timeoutMillis
+        while (System.currentTimeMillis() < deadline) {
+            val status = achievementsService.importStatus(user)
+            if (status.state != ImportState.RUNNING) return status
+            Thread.sleep(50)
+        }
+        error("Import did not finish within ${timeoutMillis}ms")
     }
 }
